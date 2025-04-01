@@ -1,15 +1,26 @@
 using DAO.Context;
 using Microsoft.EntityFrameworkCore;
+using Repository.Interface;
+using Repository.Repository;
 using VaccinationGroupProject.Components;
-
+using Blazored.SessionStorage;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))); 
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+
+
+
+
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
+builder.Services.AddScoped<IAccountRepository, AccountRepository>();
+
+
+builder.Services.AddBlazoredSessionStorage();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

@@ -22,6 +22,14 @@ namespace Repository.Repository
 
         public Account GetAccountByUsername(string username) => AccountDAO.Instance.GetAccountByUsername(username);
 
-        public Account Login(string username, string password) => AccountDAO.Instance.Login(username, password);
+        public Account Login(string username, string password)
+        {
+          Account  account=  AccountDAO.Instance.Login(username, password);
+            if(account != null)
+            {
+                return account;
+            }
+            return null;
+        }
     }
 }
