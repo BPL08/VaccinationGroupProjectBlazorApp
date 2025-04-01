@@ -31,5 +31,23 @@ namespace Repository.Repository
             }
             return null;
         }
+        public void SignUp(Account account)
+        {
+            var existingAccountByEmail = AccountDAO.Instance.GetAccountByEmail(account.Email);
+            if (existingAccountByEmail != null)
+            {
+                throw new InvalidOperationException("Email already exists.");
+            }
+
+            var existingAccountByUsername = AccountDAO.Instance.GetAccountByUsername(account.UserName);
+            if (existingAccountByUsername != null)
+            {
+                throw new InvalidOperationException("Username already exists.");
+            }
+
+            AccountDAO.Instance.AddAccount(account);
+        }
+
+
     }
 }

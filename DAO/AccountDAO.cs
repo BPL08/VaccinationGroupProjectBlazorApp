@@ -35,9 +35,21 @@ namespace DAO
 
         public void AddAccount(Account account)
         {
-            _dbContext.Accounts.Add(account);
-            _dbContext.SaveChanges();
+            try
+            {
+                _dbContext.Accounts.Add(account);
+                _dbContext.SaveChanges();
+            }
+            catch (DbUpdateException dbEx)
+            {
+                Console.WriteLine($"Database update error: {dbEx.InnerException?.Message ?? dbEx.Message}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Unexpected error: {ex.Message}");
+            }
         }
+
 
         public void UpdateAccount(Guid accountId, Account account)
         {
@@ -50,7 +62,7 @@ namespace DAO
                 existingAccount.Email = account.Email;
                 existingAccount.AccountRole = account.AccountRole;
                 existingAccount.ProfileImage = account.ProfileImage;
-                existingAccount.Salary = account.Salary;
+              
                 existingAccount.Status = account.Status;
                 existingAccount.FKCenterId = account.FKCenterId;
 
@@ -90,7 +102,12 @@ namespace DAO
                 .Include(a => a.Center)
                 .SingleOrDefault(a => a.UserName == username);
         }
-
+        public Account GetAccountByEmail(string email)
+        {
+            return _dbContext.Accounts
+                .Include(a => a.Center)
+                .SingleOrDefault(a => a.Email == email);
+        }
         public List<Account> GetAccountsByRole(string role)
         {
             return _dbContext.Accounts

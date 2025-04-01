@@ -32,6 +32,9 @@
             <div class="text-danger">@ErrorMessage</div>
         }
     </EditForm>
+    <div class="form-group">
+        <button class="btn btn-secondary" @onclick="NavigateToSignUp">Sign Up</button>
+    </div>
 </div>
 
 @code {
@@ -52,7 +55,10 @@
             ErrorMessage = "Invalid username or password";
         }
     }
-
+    private void NavigateToSignUp()
+    {
+        Navigation.NavigateTo("/signup");
+    }
     public class LoginInputModel
     {
         [Required(ErrorMessage = "Username is required.")]

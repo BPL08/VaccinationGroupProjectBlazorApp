@@ -13,8 +13,8 @@ namespace BO.Entity
         public int PhoneNumber { get; set; }
         public string Email { get; set; }
         public string AccountRole { get; set; }
-        public string ProfileImage { get; set; }
-        public int Salary { get; set; }
+        public string? ProfileImage { get; set; }
+  
         public string Status { get; set; }
     }
 

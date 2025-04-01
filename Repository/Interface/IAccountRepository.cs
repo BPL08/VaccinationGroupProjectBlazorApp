@@ -14,6 +14,9 @@ namespace Repository.Interface
         void DeleteAccount(Guid accountId);
         public Account GetAccountByUsername(string username);
         Account Login(string username, string password);
-    
+
+        void SignUp(Account account);
+
+
 }
 }

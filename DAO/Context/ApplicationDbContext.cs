@@ -24,6 +24,13 @@ namespace DAO.Context
         public DbSet<VaccinationSchedule> VaccinationSchedules { get; set; }
 
 
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            if (!optionsBuilder.IsConfigured)
+            {
+                optionsBuilder.UseSqlServer("Server=(local);Database=VaccineScheduleSystem;User Id=sa;Password=12345;TrustServerCertificate=True;");
+            }
+        }
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
