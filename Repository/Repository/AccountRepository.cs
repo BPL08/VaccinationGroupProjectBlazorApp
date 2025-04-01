@@ -22,9 +22,9 @@ namespace Repository.Repository
 
         public Account GetAccountByUsername(string username) => AccountDAO.Instance.GetAccountByUsername(username);
 
-        public Account Login(string username, string password)
+        public Account Login(string email, string password)
         {
-          Account  account=  AccountDAO.Instance.Login(username, password);
+          Account  account=  AccountDAO.Instance.Login(email, password);
             if(account != null)
             {
                 return account;

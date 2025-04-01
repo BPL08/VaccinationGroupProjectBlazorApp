@@ -123,11 +123,11 @@ namespace DAO
                 .Include(a => a.Center)
                 .ToList();
         }
-        public Account Login(string username, string password)
+        public Account Login(string email, string password)
         {
             return _dbContext.Accounts
                 .Include(a => a.Center)
-                .SingleOrDefault(a => a.UserName == username && a.Password == password && a.Status == "Active");
+                .SingleOrDefault(a => a.Email == email && a.Password == password && a.Status == "Active");
         }
     }
 }

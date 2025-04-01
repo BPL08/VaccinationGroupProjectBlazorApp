@@ -6,9 +6,9 @@ namespace Repository.Repository
 {
     public class VaccineCenterRepository : IVaccineCenterRepository
     {
-/*        public void AddVaccineCenter(VaccineCenter center) => VaccineCenterDAO.Instance.AddVaccineCenter(center);
+        public void AddVaccineCenter(VaccineCenter center) => VaccineCenterDAO.Instance.AddCenter(center);
 
-        public VaccineCenter GetVaccineCenterById(int centerId) => VaccineCenterDAO.Instance.GetVaccineCenterById(centerId);
+       /* public VaccineCenter GetVaccineCenterById(int centerId) => VaccineCenterDAO.Instance.GetVaccineCenterById(centerId);
 
         public List<VaccineCenter> GetAllVaccineCenters() => VaccineCenterDAO.Instance.GetAllVaccineCenters();
 

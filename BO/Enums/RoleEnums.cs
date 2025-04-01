@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace BO.Enums
 {
-    public static class AccountRoles
+    public static class RoleEnums
     {
         public const string Customer = "Customer";
         public const string Staff = "Staff";
