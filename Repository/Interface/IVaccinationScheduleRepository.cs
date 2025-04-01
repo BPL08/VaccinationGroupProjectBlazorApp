@@ -13,6 +13,6 @@ namespace Repository.Interface
         List<VaccinationSchedule> GetVaccinationSchedulesByStatus(int status);
         void UpdateVaccinationSchedule(Guid scheduleId, VaccinationSchedule schedule);
         void DeleteVaccinationSchedule(Guid scheduleId);
-        List<VaccinationSchedule> GetVaccinationSchedulesByOrderDetail(Guid orderDetailId);
+       /* List<VaccinationSchedule> GetVaccinationSchedulesByOrderDetail(Guid orderDetailId);*/
     }
 }

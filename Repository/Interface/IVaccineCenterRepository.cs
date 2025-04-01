@@ -4,7 +4,7 @@ namespace Repository.Interface
 {
     public interface IVaccineCenterRepository
     {
-        void AddVaccineCenter(VaccineCenter center);
+       /* void AddVaccineCenter(VaccineCenter center);
         VaccineCenter GetVaccineCenterById(int centerId);
         List<VaccineCenter> GetAllVaccineCenters();
         List<VaccineCenter> GetVaccineCentersByCity(string city);
@@ -13,6 +13,6 @@ namespace Repository.Interface
         void UpdateVaccineCenter(int centerId, VaccineCenter center);
         void DeleteVaccineCenter(int centerId);
         List<VaccineCenter> GetCentersByStatus(string status);
-        List<VaccineCenter> GetCentersByOperatingHours(string dayOfWeek);
+        List<VaccineCenter> GetCentersByOperatingHours(string dayOfWeek);*/
     }
 }

@@ -106,5 +106,11 @@ namespace DAO
                 .Include(a => a.Center)
                 .ToList();
         }
+        public Account Login(string username, string password)
+        {
+            return _dbContext.Accounts
+                .Include(a => a.Center)
+                .SingleOrDefault(a => a.UserName == username && a.Password == password && a.Status == "Active");
+        }
     }
 }

@@ -1,5 +1,6 @@
 using BO.Entity;
 using DAO;
+using Repository.Interface;
 
 namespace Repository.Repository
 {
@@ -11,7 +12,7 @@ namespace Repository.Repository
 
         public List<VaccinePackage> GetAllVaccinePackages() => VaccinePackageDAO.Instance.GetAllVaccinePackages();
 
-        public List<VaccinePackage> GetActivePackages() => VaccinePackageDAO.Instance.GetActivePackages();
+    /*    public List<VaccinePackage> GetActivePackages() => VaccinePackageDAO.Instance.GetActivePackages();
 
         public List<VaccinePackage> GetPackagesByAgeGroup(string ageGroup) => VaccinePackageDAO.Instance.GetPackagesByAgeGroup(ageGroup);
 
@@ -23,6 +24,6 @@ namespace Repository.Repository
 
         public List<VaccinePackage> GetPackagesByStatus(string status) => VaccinePackageDAO.Instance.GetPackagesByStatus(status);
 
-        public List<VaccinePackage> GetPackagesByVaccine(int vaccineId) => VaccinePackageDAO.Instance.GetPackagesByVaccine(vaccineId);
+        public List<VaccinePackage> GetPackagesByVaccine(int vaccineId) => VaccinePackageDAO.Instance.GetPackagesByVaccine(vaccineId);*/
     }
 }

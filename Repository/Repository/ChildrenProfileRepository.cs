@@ -1,13 +1,14 @@
 using BO.Entity;
 using DAO;
+using Repository.Interface;
 
 namespace Repository.Repository
 {
     public class ChildrenProfileRepository : IChildrenProfileRepository
     {
-        public void AddChildrenProfile(ChildrenProfile profile) => ChildrenProfileDAO.Instance.AddChildrenProfile(profile);
+/*        public void AddChildrenProfile(ChildrenProfile profile) => ChildrenProfileDAO.Instance.AddChildrenProfile(profile);
 
-        public ChildrenProfile GetChildrenProfileById(int profileId) => ChildrenProfileDAO.Instance.GetChildrenProfileById(profileId);
+        public ChildrenProfile GetChildrenProfileById(Guid profileId) => ChildrenProfileDAO.Instance.GetChildrenProfileById(profileId);
 
         public List<ChildrenProfile> GetAllChildrenProfiles() => ChildrenProfileDAO.Instance.GetAllChildrenProfiles();
 
@@ -19,6 +20,6 @@ namespace Repository.Repository
 
         public List<ChildrenProfile> GetChildrenProfilesByAgeRange(int minAge, int maxAge) => ChildrenProfileDAO.Instance.GetChildrenProfilesByAgeRange(minAge, maxAge);
 
-        public List<ChildrenProfile> GetChildrenProfilesByGender(string gender) => ChildrenProfileDAO.Instance.GetChildrenProfilesByGender(gender);
+        public List<ChildrenProfile> GetChildrenProfilesByGender(string gender) => ChildrenProfileDAO.Instance.GetChildrenProfilesByGender(gender);*/
     }
 }

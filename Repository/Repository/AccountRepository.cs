@@ -21,5 +21,7 @@ namespace Repository.Repository
         public void DeleteAccount(Guid accountId) => AccountDAO.Instance.DeleteAccount(accountId);
 
         public Account GetAccountByUsername(string username) => AccountDAO.Instance.GetAccountByUsername(username);
+
+        public Account Login(string username, string password) => AccountDAO.Instance.Login(username, password);
     }
 }

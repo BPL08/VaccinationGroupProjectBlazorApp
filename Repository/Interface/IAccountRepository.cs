@@ -1,4 +1,5 @@
 using BO.Entity;
+using DAO;
 
 namespace Repository.Interface
 {
@@ -12,5 +13,7 @@ namespace Repository.Interface
         void UpdateAccount(Guid accountId, Account account);
         void DeleteAccount(Guid accountId);
         public Account GetAccountByUsername(string username);
-    }
+        Account Login(string username, string password);
+    
+}
 }

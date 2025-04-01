@@ -26,6 +26,6 @@ namespace Repository.Repository
 
         public void DeleteVaccineHistory(Guid historyId) => VaccineHistoryDAO.Instance.DeleteVaccineHistory(historyId);
 
-        public List<VaccineHistory> GetVaccineHistoriesByAdministrator(string administratorId) => VaccineHistoryDAO.Instance.GetVaccineHistoriesByAdministrator(administratorId);
+       /* public List<VaccineHistory> GetVaccineHistoriesByAdministrator(string administratorId) => VaccineHistoryDAO.Instance.GetVaccineHistoriesByAdministrator(administratorId);*/
     }
 }

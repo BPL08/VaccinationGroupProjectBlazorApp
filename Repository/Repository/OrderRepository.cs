@@ -12,7 +12,7 @@ namespace Repository.Repository
 
         public List<Order> GetAllOrders() => OrderDAO.Instance.GetAllOrders();
 
-        public List<Order> GetOrdersByAccount(string accountId) => OrderDAO.Instance.GetOrdersByAccount(accountId);
+      /*  public List<Order> GetOrdersByAccount(string accountId) => OrderDAO.Instance.GetOrdersByAccount(accountId);*/
 
         public List<Order> GetOrdersByStatus(int status) => OrderDAO.Instance.GetOrdersByStatus(status);
 
@@ -22,8 +22,8 @@ namespace Repository.Repository
 
         public void DeleteOrder(Guid orderId) => OrderDAO.Instance.DeleteOrder(orderId);
 
-        public List<Order> GetOrdersByPaymentMethod(string paymentMethod) => OrderDAO.Instance.GetOrdersByPaymentMethod(paymentMethod);
+/*        public List<Order> GetOrdersByPaymentMethod(string paymentMethod) => OrderDAO.Instance.GetOrdersByPaymentMethod(paymentMethod);
 
-        public decimal GetTotalOrderAmount(Guid orderId) => OrderDAO.Instance.GetTotalOrderAmount(orderId);
+        public decimal GetTotalOrderAmount(Guid orderId) => OrderDAO.Instance.GetTotalOrderAmount(orderId);*/
     }
 }

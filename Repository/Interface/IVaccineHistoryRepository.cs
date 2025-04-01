@@ -14,6 +14,6 @@ namespace Repository.Interface
         List<VaccineHistory> GetVaccineHistoriesByVerificationStatus(int status);
         void UpdateVaccineHistory(Guid historyId, VaccineHistory history);
         void DeleteVaccineHistory(Guid historyId);
-        List<VaccineHistory> GetVaccineHistoriesByAdministrator(string administratorId);
+      /*  List<VaccineHistory> GetVaccineHistoriesByAdministrator(string administratorId);*/
     }
 }

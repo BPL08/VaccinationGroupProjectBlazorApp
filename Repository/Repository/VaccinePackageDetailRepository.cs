@@ -1,5 +1,6 @@
 using BO.Entity;
 using DAO;
+using Repository.Interface;
 
 namespace Repository.Repository
 {

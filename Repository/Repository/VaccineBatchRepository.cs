@@ -1,5 +1,6 @@
 using BO.Entity;
 using DAO;
+using Repository.Interface;
 
 namespace Repository.Repository
 {
@@ -11,7 +12,7 @@ namespace Repository.Repository
 
         public List<VaccineBatch> GetAllVaccineBatches() => VaccineBatchDAO.Instance.GetAllVaccineBatches();
 
-        public List<VaccineBatch> GetVaccineBatchesByVaccine(int vaccineId) => VaccineBatchDAO.Instance.GetVaccineBatchesByVaccine(vaccineId);
+   /*     public List<VaccineBatch> GetVaccineBatchesByVaccine(int vaccineId) => VaccineBatchDAO.Instance.GetVaccineBatchesByVaccine(vaccineId);
 
         public List<VaccineBatch> GetActiveBatches() => VaccineBatchDAO.Instance.GetActiveBatches();
 
@@ -21,6 +22,6 @@ namespace Repository.Repository
 
         public List<VaccineBatch> GetBatchesByExpiryDate(DateTime expiryDate) => VaccineBatchDAO.Instance.GetBatchesByExpiryDate(expiryDate);
 
-        public List<VaccineBatch> GetBatchesByManufacturer(string manufacturer) => VaccineBatchDAO.Instance.GetBatchesByManufacturer(manufacturer);
+        public List<VaccineBatch> GetBatchesByManufacturer(string manufacturer) => VaccineBatchDAO.Instance.GetBatchesByManufacturer(manufacturer);*/
     }
 }

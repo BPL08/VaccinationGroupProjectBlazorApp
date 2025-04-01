@@ -5,7 +5,7 @@ namespace Repository.Interface
     public interface IVaccineBatchRepository
     {
         void AddVaccineBatch(VaccineBatch batch);
-        VaccineBatch GetVaccineBatchById(int batchId);
+      /*  VaccineBatch GetVaccineBatchById(int batchId);
         List<VaccineBatch> GetAllVaccineBatches();
         List<VaccineBatch> GetVaccineBatchesByVaccine(int vaccineId);
         List<VaccineBatch> GetVaccineBatchesByCenter(int centerId);
@@ -14,6 +14,6 @@ namespace Repository.Interface
         void UpdateVaccineBatch(int batchId, VaccineBatch batch);
         void DeleteVaccineBatch(int batchId);
         List<VaccineBatch> GetAvailableVaccineBatches();
-        List<VaccineBatch> GetVaccineBatchesByManufacturer(string manufacturer);
+        List<VaccineBatch> GetVaccineBatchesByManufacturer(string manufacturer);*/
     }
 }

@@ -12,6 +12,6 @@ namespace Repository.Interface
         List<OrderDetail> GetOrderDetailsByVaccinePackage(int packageId);
         void UpdateOrderDetail(Guid orderDetailId, OrderDetail orderDetail);
         void DeleteOrderDetail(Guid orderDetailId);
-        decimal GetTotalPrice(Guid orderDetailId);
+      /*  decimal GetTotalPrice(Guid orderDetailId);*/
     }
 }
