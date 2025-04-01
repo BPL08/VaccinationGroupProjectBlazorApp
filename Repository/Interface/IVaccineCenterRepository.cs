@@ -4,8 +4,8 @@ namespace Repository.Interface
 {
     public interface IVaccineCenterRepository
     {
-       /* void AddVaccineCenter(VaccineCenter center);
-        VaccineCenter GetVaccineCenterById(int centerId);
+        void AddVaccineCenter(VaccineCenter center);
+      /*  VaccineCenter GetVaccineCenterById(int centerId);
         List<VaccineCenter> GetAllVaccineCenters();
         List<VaccineCenter> GetVaccineCentersByCity(string city);
         List<VaccineCenter> GetVaccineCentersByDistrict(string district);

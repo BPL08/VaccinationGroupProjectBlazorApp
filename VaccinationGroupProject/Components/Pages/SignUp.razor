@@ -74,7 +74,7 @@
                     Password = InputModel.Password,
                     PhoneNumber = phoneNumber,
                     Email = InputModel.Email,
-                    AccountRole = AccountRoles.Customer,
+                    AccountRole = RoleEnums.Customer,
                     ProfileImage = null,
                     FKCenterId = null,
                     Center = null,
@@ -103,7 +103,7 @@
         public string Password { get; set; }
 
         [Required(ErrorMessage = "Phone number is required.")]
-        public string PhoneNumber { get; set; } // Changed to string
+        public string PhoneNumber { get; set; }
 
         [Required(ErrorMessage = "Email is required.")]
         [EmailAddress(ErrorMessage = "Invalid email address.")]
