@@ -44,7 +44,8 @@
     private async Task HandleLogin()
     {
         var account = AccountRepository.Login(InputModel.Email, InputModel.Password);
-
+        Console.WriteLine(InputModel.Email);
+        Console.WriteLine(InputModel.Password);
         if (account != null)
         {
             await SessionStorage.SetItemAsync("AccountId", account.AccountId.ToString());
@@ -59,7 +60,7 @@
             }
             else
             {
-                Navigation.NavigateTo("/customer");
+                Navigation.NavigateTo("/customer/home");
             }
         }
         else
