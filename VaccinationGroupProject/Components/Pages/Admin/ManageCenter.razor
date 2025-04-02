@@ -1,0 +1,495 @@
+﻿@page "/admin/center"
+@using VaccinationGroupProject.Components.Admin
+@inject ISessionStorageService SessionStorage
+@inject NavigationManager Navigation
+@inject Repository.Interface.IVaccineCenterRepository VaccineCenterRepository
+@rendermode InteractiveServer
+@layout AdminLayout
+@inject IJSRuntime JSRuntime
+
+<div class="container-fluid">
+    <div class="row">
+        <main class="col-md-9 col-lg-10 p-4">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary bg-gradient text-white d-flex justify-content-between align-items-center py-3">
+                    <h3 class="m-0 fw-bold"><i class="bi bi-hospital me-2"></i>Quản lý trung tâm tiêm chủng</h3>
+                    <button class="btn btn-light" @onclick="ShowAddCenterModal">
+                        <i class="bi bi-plus-circle me-1"></i> Thêm trung tâm mới
+                    </button>
+                </div>
+                
+                <div class="card-body">
+                    <div class="mb-4">
+                        <div class="input-group shadow-sm">
+                            <span class="input-group-text bg-white border-end-0">
+                                <i class="bi bi-search text-primary"></i>
+                            </span>
+                            <input type="text" class="form-control border-start-0" placeholder="Tìm kiếm trung tâm..." 
+                                   @bind="searchTerm" @bind:event="oninput" @onkeyup="SearchCenters" />
+                            <button class="btn btn-primary" @onclick="SearchCenters">
+                                <i class="bi bi-funnel-fill me-1"></i> Tìm kiếm
+                            </button>
+                        </div>
+                    </div>
+
+                    @if (!isAuthorized && hasRendered)
+                    {
+                        <div class="alert alert-danger">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i> Truy cập không được phép. Đang chuyển hướng...
+                        </div>
+                    }
+                    else if (centers == null)
+                    {
+                        <div class="text-center p-5">
+                            <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+                                <span class="visually-hidden">Đang tải...</span>
+                            </div>
+                            <p class="mt-3 text-muted">Đang tải dữ liệu trung tâm...</p>
+                        </div>
+                    }
+                    else if (!centers.Any())
+                    {
+                        <div class="text-center p-5 bg-light border rounded">
+                            <i class="bi bi-geo-alt text-muted" style="font-size: 3rem;"></i>
+                            <p class="lead mt-3">Không tìm thấy trung tâm nào.</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead class="table-light text-nowrap">
+                                    <tr>
+                                        <th scope="col" class="rounded-start">ID</th>
+                                        <th scope="col">Tên trung tâm</th>
+                                        <th scope="col">Địa điểm</th>
+                                        <th scope="col">Liên hệ</th>
+                                        <th scope="col">Email</th>
+                                        <th scope="col">Trạng thái</th>
+                                        <th scope="col" class="rounded-end text-center">Thao tác</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var center in centers)
+                                    {
+                                        <tr class="border-bottom">
+                                            <td class="text-muted">@center.VacineCenterId</td>
+                                            <td class="fw-medium">@center.Name</td>
+                                            <td><i class="bi bi-geo-alt-fill text-danger me-1"></i> @center.Location</td>
+                                            <td><i class="bi bi-telephone-fill text-success me-1"></i> @center.ContactNumber</td>
+                                            <td><i class="bi bi-envelope-fill text-primary me-1"></i> @center.Email</td>
+                                            <td>
+                                                <span class="badge rounded-pill @(center.Status?.ToLower() == "active" ? "bg-success" : "bg-danger")">
+                                                    @(center.Status?.ToLower() == "active" ? "Hoạt động" : "Không hoạt động")
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <div class="d-flex justify-content-center gap-2">
+                                                    <button class="btn btn-sm btn-outline-primary" @onclick="() => ShowEditModal(center)">
+                                                        <i class="bi bi-pencil-square"></i>
+                                                    </button>
+                                                    <button class="btn btn-sm btn-outline-danger" @onclick="() => DeleteCenter(center.VacineCenterId)">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center mt-4">
+                            <p class="text-muted mb-0">Trang @currentPage / @totalPages</p>
+                            <div class="btn-group">
+                                <button class="btn @(currentPage <= 1 ? "btn-outline-secondary" : "btn-outline-primary")" 
+                                        @onclick="PreviousPage" disabled="@(currentPage <= 1)">
+                                    <i class="bi bi-chevron-left"></i> Trước
+                                </button>
+                                <button class="btn @(currentPage >= totalPages ? "btn-outline-secondary" : "btn-outline-primary")" 
+                                        @onclick="NextPage" disabled="@(currentPage >= totalPages)">
+                                    Sau <i class="bi bi-chevron-right"></i>
+                                </button>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            @if (showModal)
+            {
+                <div class="modal fade show d-block" tabindex="-1" @onclick="CloseModal">
+                    <div class="modal-dialog modal-dialog-centered" @onclick:stopPropagation>
+                        <div class="modal-content shadow">
+                            <div class="modal-header bg-primary text-white">
+                                <h4 class="modal-title"><i class="bi bi-plus-circle me-2"></i>Thêm trung tâm mới</h4>
+                                <button type="button" class="btn-close btn-close-white" @onclick="CloseModal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <EditForm Model="@newCenter" OnValidSubmit="HandleAddCenter">
+                                    <DataAnnotationsValidator />
+                                    <ValidationSummary class="text-danger" />
+                                    <div class="mb-3">
+                                        <label class="form-label">Tên trung tâm</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="bi bi-building"></i></span>
+                                            <InputText @bind-Value="newCenter.Name" class="form-control" placeholder="Nhập tên trung tâm" />
+                                        </div>
+                                        <ValidationMessage For="@(() => newCenter.Name)" class="text-danger" />
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Địa điểm</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="bi bi-geo-alt"></i></span>
+                                            <InputText @bind-Value="newCenter.Location" class="form-control" placeholder="Nhập địa chỉ" />
+                                        </div>
+                                        <ValidationMessage For="@(() => newCenter.Location)" class="text-danger" />
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Số điện thoại</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="bi bi-telephone"></i></span>
+                                            <InputText @bind-Value="contactNumberString" class="form-control" type="text" pattern="\d*" maxlength="10" placeholder="Nhập số điện thoại" />
+                                        </div>
+                                        <ValidationMessage For="@(() => newCenter.ContactNumber)" class="text-danger" />
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Email</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                                            <InputText @bind-Value="newCenter.Email" class="form-control" placeholder="Nhập email" />
+                                        </div>
+                                        <ValidationMessage For="@(() => newCenter.Email)" class="text-danger" />
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Trạng thái</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="bi bi-toggle-on"></i></span>
+                                            <InputSelect @bind-Value="newCenter.Status" class="form-control">
+                                                <option value="">Chọn trạng thái</option>
+                                                <option value="Active">Hoạt động</option>
+                                                <option value="Inactive">Không hoạt động</option>
+                                            </InputSelect>
+                                        </div>
+                                        <ValidationMessage For="@(() => newCenter.Status)" class="text-danger" />
+                                    </div>
+                                    <div class="d-flex gap-2 justify-content-end mt-4">
+                                        <button type="button" class="btn btn-outline-secondary" @onclick="CloseModal">
+                                            <i class="bi bi-x-circle me-1"></i> Hủy
+                                        </button>
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="bi bi-check-circle me-1"></i> Lưu
+                                        </button>
+                                    </div>
+                                </EditForm>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            @if (showEditModal)
+            {
+                <div class="modal fade show d-block" tabindex="-1" @onclick="CloseEditModal">
+                    <div class="modal-dialog modal-dialog-centered" @onclick:stopPropagation>
+                        <div class="modal-content shadow">
+                            <div class="modal-header bg-primary text-white">
+                                <h4 class="modal-title"><i class="bi bi-pencil-square me-2"></i>Chỉnh sửa trung tâm</h4>
+                                <button type="button" class="btn-close btn-close-white" @onclick="CloseEditModal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <EditForm Model="@editCenter" OnValidSubmit="HandleEditCenter">
+                                    <DataAnnotationsValidator />
+                                    <ValidationSummary class="text-danger" />
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label">Tên trung tâm</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="bi bi-building"></i></span>
+                                            <InputText @bind-Value="editCenter.Name" class="form-control" />
+                                        </div>
+                                        <ValidationMessage For="@(() => editCenter.Name)" class="text-danger" />
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label">Địa điểm</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="bi bi-geo-alt"></i></span>
+                                            <InputText @bind-Value="editCenter.Location" class="form-control" />
+                                        </div>
+                                        <ValidationMessage For="@(() => editCenter.Location)" class="text-danger" />
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label">Số điện thoại</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="bi bi-telephone"></i></span>
+                                            <InputText @bind-Value="editContactNumberString" class="form-control" type="text" pattern="\d*" maxlength="10" />
+                                        </div>
+                                        <ValidationMessage For="@(() => editCenter.ContactNumber)" class="text-danger" />
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label">Email</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                                            <InputText @bind-Value="editCenter.Email" class="form-control" />
+                                        </div>
+                                        <ValidationMessage For="@(() => editCenter.Email)" class="text-danger" />
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label">Trạng thái</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="bi bi-toggle-on"></i></span>
+                                            <InputSelect @bind-Value="editCenter.Status" class="form-control">
+                                                <option value="Active">Hoạt động</option>
+                                                <option value="Inactive">Không hoạt động</option>
+                                            </InputSelect>
+                                        </div>
+                                    </div>
+
+                                    <div class="d-flex gap-2 justify-content-end mt-4">
+                                        <button type="button" class="btn btn-outline-secondary" @onclick="CloseEditModal">
+                                            <i class="bi bi-x-circle me-1"></i> Hủy
+                                        </button>
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="bi bi-check-circle me-1"></i> Lưu thay đổi
+                                        </button>
+                                    </div>
+                                </EditForm>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </main>
+    </div>
+</div>
+
+<!-- Add Bootstrap Icons -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<style>
+    .table th {
+        font-weight: 600;
+        color: #495057;
+    }
+    
+    .card {
+        border-radius: 0.5rem;
+        border: none;
+    }
+    
+    .card-header {
+        border-radius: 0.5rem 0.5rem 0 0 !important;
+    }
+    
+    .modal-content {
+        border-radius: 0.5rem;
+        border: none;
+    }
+    
+    .modal-header {
+        border-radius: 0.5rem 0.5rem 0 0;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        border-color: #86b7fe;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    }
+    
+    .btn-primary {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+    }
+    
+    .btn-primary:hover {
+        background-color: #0b5ed7;
+        border-color: #0a58ca;
+    }
+    
+    .input-group-text {
+        background-color: #f8f9fa;
+    }
+</style>
+
+@code {
+    private bool isAuthorized = false;
+    private bool hasRendered = false;
+    private List<VaccineCenter> centers;
+    private int currentPage = 1;
+    private int pageSize = 10;
+    private int totalCount = 0;
+    private int totalPages => (int)Math.Ceiling((double)totalCount / pageSize);
+    private bool showModal = false;
+    private VaccineCenter newCenter = new BO.Entity.VaccineCenter();
+    private string contactNumberString
+    {
+        get => newCenter.ContactNumber.ToString();
+        set => newCenter.ContactNumber = int.TryParse(value, out int result) ? result : 0;
+    }
+
+  
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && !hasRendered)
+        {
+            var accountId = await SessionStorage.GetItemAsync<string>("AccountId");
+
+            if (!string.IsNullOrEmpty(accountId))
+            {
+                var account = await GetAccountDetails(accountId);
+                isAuthorized = account?.AccountRole == RoleEnums.Admin;
+            }
+            else
+            {
+                isAuthorized = false;
+            }
+
+            hasRendered = true;
+
+            if (!isAuthorized)
+            {
+                Navigation.NavigateTo("/Error");
+            }
+            else
+            {
+                await LoadCenters();
+            }
+        }
+    }
+
+    private async Task LoadCenters()
+    {
+        var (fetchedCenters, count) = VaccineCenterRepository.GetAllVaccineCenters(currentPage, pageSize);
+        centers = fetchedCenters;
+        totalCount = count;
+        StateHasChanged();
+    }
+
+    private async void PreviousPage()
+    {
+        if (currentPage > 1)
+        {
+            currentPage--;
+            await LoadCenters();
+        }
+    }
+
+    private async void NextPage()
+    {
+        if (currentPage < totalPages)
+        {
+            currentPage++;
+            await LoadCenters();
+        }
+    }
+
+    private void ShowAddCenterModal()
+    {
+        newCenter = new BO.Entity.VaccineCenter(); // Reset form
+        contactNumberString = ""; // Reset contact number
+        showModal = true;
+    }
+
+    private void CloseModal()
+    {
+        showModal = false;
+    }
+
+    private async Task HandleAddCenter()
+    {
+        VaccineCenterRepository.AddVaccineCenter(newCenter);
+        showModal = false;
+        await LoadCenters(); // Refresh the list
+    }
+
+    
+    private async Task<Account> GetAccountDetails(string accountId)
+    {
+        return await Task.FromResult(new Account
+        {
+            AccountId = Guid.Parse(accountId),
+            AccountRole = RoleEnums.Admin
+        });
+    }
+
+    private bool showEditModal = false;
+    private VaccineCenter editCenter;
+    private string searchTerm = "";
+    private string editContactNumberString
+    {
+        get => editCenter?.ContactNumber.ToString() ?? "";
+        set => editCenter.ContactNumber = int.TryParse(value, out int result) ? result : 0;
+    }
+
+    private void ShowEditModal(VaccineCenter center)
+    {
+        editCenter = new VaccineCenter
+        {
+            VacineCenterId = center.VacineCenterId,
+            Name = center.Name,
+            Location = center.Location,
+            ContactNumber = center.ContactNumber,
+            Email = center.Email,
+            Status = center.Status
+        };
+        editContactNumberString = center.ContactNumber.ToString();
+        showEditModal = true;
+    }
+
+    private void CloseEditModal()
+    {
+        showEditModal = false;
+        editCenter = null;
+    }
+
+    private async Task HandleEditCenter()
+    {
+        try
+        {
+            VaccineCenterRepository.UpdateVaccineCenter(editCenter.VacineCenterId, editCenter);
+            showEditModal = false;
+            await LoadCenters();
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", $"Error updating center: {ex.Message}");
+        }
+    }
+
+    private async Task DeleteCenter(int centerId)
+    {
+        bool confirmed = await JSRuntime.InvokeAsync<bool>("confirm", "Are you sure you want to delete this center?");
+        
+        if (confirmed)
+        {
+            try
+            {
+                VaccineCenterRepository.DeleteVaccineCenter(centerId);
+                await LoadCenters();
+            }
+            catch (Exception ex)
+            {
+                await JSRuntime.InvokeVoidAsync("alert", $"Error deleting center: {ex.Message}");
+            }
+        }
+    }
+
+    private async Task SearchCenters()
+    {
+        if (string.IsNullOrWhiteSpace(searchTerm))
+        {
+            await LoadCenters();
+        }
+        else
+        {
+            centers = VaccineCenterRepository.SearchCenters(searchTerm);
+            StateHasChanged();
+        }
+    }
+}

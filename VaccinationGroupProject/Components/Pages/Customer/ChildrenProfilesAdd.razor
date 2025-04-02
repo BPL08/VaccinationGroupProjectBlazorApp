@@ -1,0 +1,151 @@
+﻿@page "/customer/children-profiles/add"
+@inject ISessionStorageService SessionStorage
+@inject NavigationManager Navigation
+@inject IAccountRepository AccountRepository
+@inject IChildrenProfileRepository ChildrenProfileRepository
+@using BO.Entity
+@using BO.Enums
+@rendermode InteractiveServer
+
+<div class="container mt-5 add-profile-container">
+    <h2 class="text-center mb-4 text-primary fw-bold">Add New Child Profile</h2>
+
+    @if (!isAuthorized && hasRendered)
+    {
+        <div class="alert alert-danger text-center">Unauthorized access. Redirecting to login...</div>
+    }
+    else
+    {
+        <div class="card shadow-lg p-4 add-profile-card">
+            <EditForm Model="@inputModel" OnValidSubmit="HandleCreateProfile">
+                <DataAnnotationsValidator />
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Child's Name</label>
+                    <InputText @bind-Value="inputModel.Name" class="form-control" placeholder="Enter child's name" />
+                    <ValidationMessage For="@(() => inputModel.Name)" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Parent's Name</label>
+                    <InputText @bind-Value="inputModel.ParentName" class="form-control" placeholder="Enter parent's name" />
+                    <ValidationMessage For="@(() => inputModel.ParentName)" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Gender</label>
+                    <InputSelect @bind-Value="inputModel.Gender" class="form-select">
+                        <option value="">Select Gender</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                        <option value="Other">Other</option>
+                    </InputSelect>
+                    <ValidationMessage For="@(() => inputModel.Gender)" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Date of Birth</label>
+                    <InputDate @bind-Value="inputModel.DateOfBirth" class="form-control" max="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                    <ValidationMessage For="@(() => inputModel.DateOfBirth)" class="text-danger" />
+                </div>
+                <div class="d-flex justify-content-between">
+                    <button type="submit" class="btn btn-primary">Create Profile</button>
+                    <button type="button" class="btn btn-secondary" @onclick="GoBack">Cancel</button>
+                </div>
+            </EditForm>
+
+            @if (!string.IsNullOrEmpty(Message))
+            {
+                <div class="alert @(Message.Contains("successfully") ? "alert-success" : "alert-danger") mt-3">@Message</div>
+            }
+        </div>
+    }
+</div>
+
+<link rel="stylesheet" href="customer/AddProfile.razor.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+@code {
+    private bool hasRendered = false;
+    private bool isAuthorized = false;
+    private InputProfileModel inputModel = new InputProfileModel();
+    private string Message;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && !hasRendered)
+        {
+            var accountIdString = await SessionStorage.GetItemAsync<string>("AccountId");
+
+            if (string.IsNullOrEmpty(accountIdString) || !Guid.TryParse(accountIdString, out Guid accountId))
+            {
+                isAuthorized = false;
+            }
+            else
+            {
+                var account = AccountRepository.GetAccountById(accountId);
+                isAuthorized = account?.AccountRole == RoleEnums.Customer;
+            }
+
+            hasRendered = true;
+
+            if (!isAuthorized)
+            {
+                Navigation.NavigateTo("/login");
+            }
+            StateHasChanged();
+        }
+    }
+
+    private async Task HandleCreateProfile()
+    {
+        try
+        {
+            var accountIdString = await SessionStorage.GetItemAsync<string>("AccountId");
+            if (!Guid.TryParse(accountIdString, out Guid accountId))
+            {
+                Message = "Invalid account session.";
+                return;
+            }
+
+            var newProfile = new ChildrenProfile
+                {
+                    ProfileId = Guid.NewGuid(),
+                    FKAccountId = accountId,
+                    Name = inputModel.Name,
+                    ParentName = inputModel.ParentName,
+                    Gender = inputModel.Gender,
+                    DateOfBirth = inputModel.DateOfBirth,
+                    Status = ActivationEnums.ACTIVATE // Mặc định là Active khi tạo mới
+                };
+
+            ChildrenProfileRepository.AddProfile(newProfile);
+            Message = "Profile created successfully!";
+            inputModel = new InputProfileModel(); // Reset form
+            await Task.Delay(2000); // Hiển thị thông báo 2 giây trước khi quay lại
+            Navigation.NavigateTo("/customer/children-profiles");
+        }
+        catch (Exception ex)
+        {
+            Message = $"Error creating profile: {ex.Message}";
+        }
+        StateHasChanged();
+    }
+
+    private void GoBack()
+    {
+        Navigation.NavigateTo("/customer/children-profiles");
+    }
+
+    public class InputProfileModel
+    {
+        [Required(ErrorMessage = "Child's name is required.")]
+        public string Name { get; set; }
+
+        [Required(ErrorMessage = "Parent's name is required.")]
+        public string ParentName { get; set; }
+
+        [Required(ErrorMessage = "Gender is required.")]
+        public string Gender { get; set; }
+
+        [Required(ErrorMessage = "Date of birth is required.")]
+        public DateTime DateOfBirth { get; set; }
+    }
+}

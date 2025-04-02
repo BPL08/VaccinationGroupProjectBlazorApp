@@ -9,34 +9,40 @@
 @inject IOrderDetailRepository OrderDetailRepository
 @inject IVaccinationScheduleRepository VaccinationScheduleRepository
 @inject IChildrenProfileRepository ChildrenProfileRepository
+@inject IVaccineCenterRepository VaccineCenterRepository
 @using BO.Entity
 @using BO.Enums
 @rendermode InteractiveServer
 
-<div class="container mt-4">
-    <h2 class="text-center mb-4">Order a Vaccination</h2>
+<div class="container mt-5">
+    <div class="d-flex align-items-center mb-4">
+        <button class="btn btn-secondary me-3" @onclick="GoBack">
+            <i class="bi bi-arrow-left"></i> Back
+        </button>
+        <h2 class="text-center mb-0 text-primary fw-bold">Order a Vaccination</h2>
+    </div>
 
     @if (!isAuthorized && hasRendered)
     {
-        <div class="text-danger text-center">Unauthorized access. Redirecting to login...</div>
+        <div class="alert alert-danger text-center">Unauthorized access. Redirecting to login...</div>
     }
-    else if (vaccines == null || vaccinePackages == null || childrenProfiles == null)
+    else if (vaccines == null || vaccinePackages == null || childrenProfiles == null || vaccineCenters == null)
     {
-        <p class="lead text-center">Loading data...</p>
+        <p class="lead text-center text-muted">Loading data...</p>
     }
     else
     {
         <!-- Vaccine lẻ -->
-        <section class="mb-5">
-            <h3>Individual Vaccines</h3>
+        <section class="mb-5 card shadow-sm p-4">
+            <h3 class="text-success mb-3">Individual Vaccines</h3>
             @if (!vaccines.Any())
             {
-                <p class="lead">No vaccines available.</p>
+                <p class="lead text-muted">No vaccines available.</p>
             }
             else
             {
-                <div class="overflow-auto">
-                    <table class="table table-striped table-hover table-bordered">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover table-bordered align-middle">
                         <thead class="table-dark">
                             <tr>
                                 <th>Name</th>
@@ -51,7 +57,7 @@
                                 <tr>
                                     <td>@vaccine.Name</td>
                                     <td>@(vaccine.Category?.CategoryName ?? "N/A")</td>
-                                    <td>@vaccine.Price</td>
+                                    <td>@vaccine.Price.ToString("N0")</td>
                                     <td>
                                         <button class="btn btn-primary btn-sm" @onclick="() => AddToCart(vaccine, null)">Add to Cart</button>
                                     </td>
@@ -64,16 +70,16 @@
         </section>
 
         <!-- Gói Vaccine -->
-        <section class="mb-5">
-            <h3>Vaccine Packages</h3>
+        <section class="mb-5 card shadow-sm p-4">
+            <h3 class="text-success mb-3">Vaccine Packages</h3>
             @if (!vaccinePackages.Any())
             {
-                <p class="lead">No vaccine packages available.</p>
+                <p class="lead text-muted">No vaccine packages available.</p>
             }
             else
             {
-                <div class="overflow-auto">
-                    <table class="table table-striped table-hover table-bordered">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover table-bordered align-middle">
                         <thead class="table-dark">
                             <tr>
                                 <th>Package Name</th>
@@ -90,7 +96,7 @@
                                 <tr>
                                     <td>@package.PackageName</td>
                                     <td>@package.PackageDescription</td>
-                                    <td>@totalPrice</td>
+                                    <td>@totalPrice.ToString("N0")</td>
                                     <td>
                                         <button class="btn btn-primary btn-sm" @onclick="() => AddToCart(null, package)">Add to Cart</button>
                                     </td>
@@ -103,16 +109,40 @@
         </section>
 
         <!-- Giỏ hàng -->
-        <section class="mb-5">
-            <h3>Your Cart</h3>
+        <section class="mb-5 card shadow-sm p-4">
+            <h3 class="text-success mb-3">Your Cart</h3>
             @if (!cartItems.Any())
             {
-                <p class="lead">Your cart is empty.</p>
+                <p class="lead text-muted">Your cart is empty.</p>
             }
             else
             {
-                <div class="overflow-auto">
-                    <table class="table table-striped table-hover table-bordered">
+                <!-- Chọn Children Profile và Vaccine Center -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Select Child Profile:</label>
+                        <select class="form-select" @bind="selectedProfileId">
+                            <option value="">-- Select a profile --</option>
+                            @foreach (var profile in childrenProfiles)
+                            {
+                                <option value="@profile.ProfileId">@profile.Name (DOB: @profile.DateOfBirth.ToShortDateString())</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Select Vaccination Center:</label>
+                        <select class="form-select" @bind="selectedCenterId">
+                            <option value="0">-- Select a center --</option>
+                            @foreach (var center in vaccineCenters)
+                            {
+                                <option value="@center.VacineCenterId">@center.Name (@center.Location)</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover table-bordered align-middle">
                         <thead class="table-dark">
                             <tr>
                                 <th>Name</th>
@@ -126,7 +156,7 @@
                             {
                                 <tr>
                                     <td>@item.Name</td>
-                                    <td>@item.Price</td>
+                                    <td>@item.Price.ToString("N0")</td>
                                     <td>
                                         <InputDate @bind-Value="item.AppointmentDate" class="form-control" min="@DateTime.Now.ToString("yyyy-MM-dd")" />
                                     </td>
@@ -137,10 +167,10 @@
                             }
                         </tbody>
                     </table>
-                    <p><strong>Total: @cartItems.Sum(i => i.Price) VND</strong></p>
+                    <p class="fw-bold">Total: @cartItems.Sum(i => i.Price).ToString("N0") VND</p>
                 </div>
                 <div class="d-flex justify-content-end">
-                    <button class="btn btn-success" @onclick="CreateOrder">Create Order</button>
+                    <button class="btn btn-success" @onclick="CreateOrder" disabled="@(string.IsNullOrEmpty(selectedProfileId) || selectedCenterId == 0)">Create Order</button>
                 </div>
             }
         </section>
@@ -152,6 +182,7 @@
     }
 </div>
 
+<link rel="stylesheet" href="customer/Orders.razor.css" />
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
@@ -162,7 +193,10 @@
     private List<VaccinePackage> vaccinePackages;
     private List<VaccinePackageDetail> vaccinePackageDetails;
     private List<ChildrenProfile> childrenProfiles;
+    private List<VaccineCenter> vaccineCenters;
     private List<CartItem> cartItems = new List<CartItem>();
+    private string selectedProfileId;
+    private int selectedCenterId;
     private string Message;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -205,6 +239,7 @@
             vaccinePackages = VaccinePackageRepository.GetAllVaccinePackages() ?? new List<VaccinePackage>();
             vaccinePackageDetails = VaccinePackageDetailRepository.GetAllVaccinePackageDetails() ?? new List<VaccinePackageDetail>();
             childrenProfiles = ChildrenProfileRepository.GetProfilesByAccountId(accountId) ?? new List<ChildrenProfile>();
+            vaccineCenters = VaccineCenterRepository.GetAllVaccineCenters() ?? new List<VaccineCenter>();
 
             StateHasChanged();
         }
@@ -214,6 +249,7 @@
             vaccinePackages = new List<VaccinePackage>();
             vaccinePackageDetails = new List<VaccinePackageDetail>();
             childrenProfiles = new List<ChildrenProfile>();
+            vaccineCenters = new List<VaccineCenter>();
             Message = $"Error loading data: {ex.Message}";
             StateHasChanged();
         }
@@ -233,7 +269,7 @@
                     VaccineId = vaccine.VaccineId,
                     Name = vaccine.Name,
                     Price = vaccine.Price,
-                    AppointmentDate = DateTime.Now // Giá trị mặc định, người dùng sẽ chỉnh sau
+                    AppointmentDate = DateTime.Now
                 });
         }
         else if (package != null)
@@ -245,7 +281,7 @@
                     VaccinePackageId = package.VaccinePackageId,
                     Name = package.PackageName,
                     Price = totalPrice,
-                    AppointmentDate = DateTime.Now // Giá trị mặc định, người dùng sẽ chỉnh sau
+                    AppointmentDate = DateTime.Now
                 });
         }
         StateHasChanged();
@@ -267,10 +303,15 @@
                 return;
             }
 
-            if (!childrenProfiles.Any())
+            if (string.IsNullOrEmpty(selectedProfileId))
             {
-                Message = "No children profiles found. Please add a profile first.";
-                Navigation.NavigateTo("/customer/children-profiles");
+                Message = "Please select a child profile.";
+                return;
+            }
+
+            if (selectedCenterId == 0)
+            {
+                Message = "Please select a vaccination center.";
                 return;
             }
 
@@ -282,7 +323,7 @@
             var order = new Order
                 {
                     OrderId = Guid.NewGuid(),
-                    FKProfileId = childrenProfiles.First().ProfileId, // Lấy profile đầu tiên, có thể thêm logic chọn
+                    FKProfileId = Guid.Parse(selectedProfileId),
                     TotalAmountPrice = cartItems.Sum(i => i.Price),
                     TotalPaidPrice = 0,
                     PurchaseDate = DateTime.Now,
@@ -309,12 +350,12 @@
                         {
                             VaccinationScheduleId = Guid.NewGuid(),
                             FKProfileId = order.FKProfileId,
-                            FKCenterId = vaccines.First(v => v.VaccineId == item.VaccineId.Value).Batch.FKCenterId, // Lấy từ batch của vaccine
+                            FKCenterId = selectedCenterId,
                             FKOrderDetailsId = orderDetail.OrderDetailId,
-                            DoseNumber = 1, // Mặc định liều 1, có thể thêm logic
+                            DoseNumber = 1,
                             AppointmentDate = item.AppointmentDate,
                             ActualDate = null,
-                            AdministeredBy = "Pending", // Chưa tiêm, có thể để trống
+                            AdministeredBy = "Pending",
                             Status = 0 // Pending
                         };
                     VaccinationScheduleRepository.AddVaccinationSchedule(schedule);
@@ -328,9 +369,9 @@
                             {
                                 OrderDetailId = Guid.NewGuid(),
                                 FKOrderId = order.OrderId,
-                                FKVaccineId = detail.FKVaccineId, // Gắn VaccineId từ package
-                                FKVaccinePackageId = item.VaccinePackageId, // Gắn PackageId
-                                TotalPrice = detail.PackagePrice // Giá từng vaccine trong gói
+                                FKVaccineId = detail.FKVaccineId,
+                                FKVaccinePackageId = item.VaccinePackageId,
+                                TotalPrice = detail.PackagePrice
                             };
                         OrderDetailRepository.AddOrderDetail(orderDetail);
 
@@ -338,13 +379,13 @@
                             {
                                 VaccinationScheduleId = Guid.NewGuid(),
                                 FKProfileId = order.FKProfileId,
-                                FKCenterId = vaccines.First(v => v.VaccineId == detail.FKVaccineId).Batch.FKCenterId, // Lấy từ batch của vaccine
+                                FKCenterId = selectedCenterId,
                                 FKOrderDetailsId = orderDetail.OrderDetailId,
-                                DoseNumber = 1, // Mặc định liều 1
+                                DoseNumber = 1,
                                 AppointmentDate = item.AppointmentDate,
                                 ActualDate = null,
                                 AdministeredBy = "Pending",
-                                Status = 1 // Pending
+                                Status = 0 // Pending
                             };
                         VaccinationScheduleRepository.AddVaccinationSchedule(schedule);
                     }
@@ -352,6 +393,8 @@
             }
 
             cartItems.Clear();
+            selectedProfileId = null;
+            selectedCenterId = 0;
             Message = "Order and schedules successfully created!";
             StateHasChanged();
         }
@@ -360,6 +403,11 @@
             Message = $"Error creating order: {ex.Message}";
             StateHasChanged();
         }
+    }
+
+    private void GoBack()
+    {
+        Navigation.NavigateTo("/customer/home");
     }
 
     private class CartItem

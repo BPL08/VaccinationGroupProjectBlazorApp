@@ -3,13 +3,13 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.13.35919.96
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VaccinationGroupProject", "VaccinationGroupProject\VaccinationGroupProject.csproj", "{BF6226D0-81F1-4380-A897-1373EB076C25}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "VaccinationGroupProject", "VaccinationGroupProject\VaccinationGroupProject.csproj", "{BF6226D0-81F1-4380-A897-1373EB076C25}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BO", "BO\BO.csproj", "{E86A5C83-89F2-45C2-B5F7-FCE3E64C0212}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BO", "BO\BO.csproj", "{E86A5C83-89F2-45C2-B5F7-FCE3E64C0212}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DAO", "DAO\DAO.csproj", "{EBF0D490-B96A-4465-8DF7-FE57595AE025}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DAO", "DAO\DAO.csproj", "{EBF0D490-B96A-4465-8DF7-FE57595AE025}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Repository", "Repository\Repository.csproj", "{752F4171-AFA7-469C-AC9E-63EC395D91CA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Repository", "Repository\Repository.csproj", "{752F4171-AFA7-469C-AC9E-63EC395D91CA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

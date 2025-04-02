@@ -12,12 +12,13 @@ namespace Repository.Repository
 
         public List<VaccineCategory> GetAllVaccineCategories() => VaccineCategoryDAO.Instance.GetAllVaccineCategories();
 
-       /* public List<VaccineCategory> GetActiveCategories() => VaccineCategoryDAO.Instance.GetActiveCategories();
+        public void UpdateVaccineCategory(int categoryId, VaccineCategory category) 
+            => VaccineCategoryDAO.Instance.UpdateVaccineCategory(categoryId, category);
 
-        public void UpdateVaccineCategory(int categoryId, VaccineCategory category) => VaccineCategoryDAO.Instance.UpdateVaccineCategory(categoryId, category);
+        public void DeleteVaccineCategory(int categoryId) 
+            => VaccineCategoryDAO.Instance.DeleteVaccineCategory(categoryId);
 
-        public void DeleteVaccineCategory(int categoryId) => VaccineCategoryDAO.Instance.DeleteVaccineCategory(categoryId);
-
-        public List<VaccineCategory> GetCategoriesByDiseaseType(string diseaseType) => VaccineCategoryDAO.Instance.GetCategoriesByDiseaseType(diseaseType);*/
+        public List<VaccineCategory> GetCategoriesByStatus(string status) 
+            => VaccineCategoryDAO.Instance.GetCategoriesByStatus(status);
     }
 }

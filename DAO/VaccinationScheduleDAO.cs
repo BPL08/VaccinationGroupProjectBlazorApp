@@ -118,6 +118,19 @@ namespace DAO
                 .Where(vs => vs.Status == status)
                 .ToList();
         }
+
+        public List<VaccinationSchedule> GetSchedulesByAccountId(Guid accountId)
+        {
+            return _dbContext.VaccinationSchedules
+                .Join(_dbContext.ChildrenProfiles,
+                      schedule => schedule.FKProfileId,
+                      profile => profile.ProfileId,
+                      (schedule, profile) => new { Schedule = schedule, Profile = profile })
+                .Where(x => x.Profile.FKAccountId == accountId)
+                .Select(x => x.Schedule)
+                .ToList();
+        }
+
         public List<VaccinationSchedule> GetSchedulesByProfileName(string profileName)
         {
             if (string.IsNullOrWhiteSpace(profileName))

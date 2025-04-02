@@ -1,6 +1,188 @@
-﻿namespace VaccinationGroupProject.Components.Pages.Customer
-{
-    public class Home
-    {
+﻿/* General styles */
+body {
+    background-color: #f4f7fa;
+    font-family: 'Poppins', sans-serif;
+    color: #333;
+}
+
+.home-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 15px;
+    padding-top: 80px; /* Để tránh bị che bởi navbar cố định */
+}
+
+/* Navbar */
+.navbar {
+    background: linear-gradient(135deg, #007bff, #00c4cc);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.navbar-brand {
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.btn-outline-light {
+    border-color: #fff;
+    color: #fff;
+    transition: all 0.3s ease;
+}
+
+    .btn-outline-light:hover {
+        background-color: #fff;
+        color: #007bff;
+    }
+
+.btn-primary {
+    background-color: #007bff;
+    border: none;
+    padding: 10px 20px;
+    transition: all 0.3s ease;
+}
+
+    .btn-primary:hover {
+        background-color: #0056b3;
+    }
+
+/* Header */
+.home-header {
+    background: linear-gradient(135deg, #007bff, #00c4cc);
+    border-radius: 10px;
+    padding: 40px 20px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+    .home-header h1 {
+        font-size: 2.5rem;
+        margin-bottom: 0;
+    }
+
+/* Section styles */
+.section-title {
+    font-size: 1.8rem;
+    color: #007bff;
+    margin-bottom: 20px;
+    position: relative;
+    display: inline-block;
+}
+
+    .section-title::after {
+        content: '';
+        width: 50px;
+        height: 3px;
+        background-color: #00c4cc;
+        position: absolute;
+        bottom: -5px;
+        left: 0;
+    }
+
+/* Centers */
+.center-card {
+    border: none;
+    border-radius: 10px;
+    transition: transform 0.3s ease;
+}
+
+    .center-card:hover {
+        transform: translateY(-5px);
+    }
+
+/* Tables */
+.table {
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.table-dark {
+    background-color: #343a40;
+}
+
+.table th, .table td {
+    vertical-align: middle;
+}
+
+.table-hover tbody tr:hover {
+    background-color: #e9ecef;
+}
+
+/* Handbook */
+.list-group-item {
+    border: none;
+    padding: 15px;
+    background-color: #fff;
+    margin-bottom: 10px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .home-header h1 {
+        font-size: 1.8rem;
+    }
+
+    .section-title {
+        font-size: 1.5rem;
+    }
+
+    .btn {
+        padding: 8px 15px;
+        font-size: 0.9rem;
+    }
+
+    .navbar-brand {
+        font-size: 1.2rem;
+    }
+
+    .accordion-button {
+        background-color: #fff;
+        color: #333;
+        border-radius: 8px 8px 0 0;
+        transition: all 0.3s ease;
+    }
+
+        .accordion-button:not(.collapsed) {
+            background-color: #e9f7ff;
+            color: #007bff;
+        }
+
+    .accordion-item {
+        border: none;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+    /* Timeline */
+    .timeline {
+        position: relative;
+        padding-left: 30px;
+    }
+
+    .timeline-item {
+        position: relative;
+        margin-bottom: 20px;
+    }
+
+    .timeline-dot {
+        position: absolute;
+        left: -25px;
+        top: 10px;
+        width: 12px;
+        height: 12px;
+        background-color: #00c4cc;
+        border-radius: 50%;
+        border: 2px solid #fff;
+        box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+    }
+
+    .timeline-content {
+        background-color: #fff;
+        border-radius: 8px;
+        transition: transform 0.3s ease;
+    }
+
+    .timeline-content:hover {
+         transform: translateX(5px);
     }
 }

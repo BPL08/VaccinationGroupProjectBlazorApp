@@ -2,71 +2,110 @@
 @using VaccinationGroupProject.Components.Admin
 @inject NavigationManager NavigationManager
 @inject ISessionStorageService SessionStorage
+@inject IAccountRepository AccountRepository
+@inject IVaccineCenterRepository VaccineCenterRepository
 @rendermode InteractiveServer
 @layout AdminLayout
 
 @if (isAuthenticated)
 {
-    <div class="container">
-        <h3 class="mb-4">Admin Dashboard</h3>
+    <div class="dashboard-container">
+        <div class="dashboard-header">
+            <h2 class="dashboard-title">Bảng điều khiển quản trị</h2>
+            <p class="dashboard-subtitle">Quản lý hệ thống tiêm chủng</p>
+        </div>
 
-        <div class="row g-4">
-            <div class="col-md-4">
-                <div class="card h-100 shadow-sm" @onclick="@(() => NavigationManager.NavigateTo("/admin/account"))">
-                    <div class="card-body text-center">
-                        <span class="fs-1 mb-3 text-primary">👥</span>
-                        <h5 class="card-title">Account Management</h5>
-                        <p class="card-text">Manage user accounts, roles, and permissions</p>
-                    </div>
+        <div class="stats-container">
+            <div class="stat-card">
+                <div class="stat-icon bg-primary-soft">
+                    <i class="bi bi-people-fill"></i>
+                </div>
+                <div class="stat-info">
+                    <h3>@userCount</h3>
+                    <p>Người dùng</p>
                 </div>
             </div>
-
-            <div class="col-md-4">
-                <div class="card h-100 shadow-sm" @onclick="@(() => NavigationManager.NavigateTo("/admin/centers"))">
-                    <div class="card-body text-center">
-                        <span class="fs-1 mb-3 text-success">🏢</span>
-                        <h5 class="card-title">Vaccination Centers</h5>
-                        <p class="card-text">Manage vaccination centers and locations</p>
-                    </div>
+            <div class="stat-card">
+                <div class="stat-icon bg-success-soft">
+                    <i class="bi bi-hospital-fill"></i>
+                </div>
+                <div class="stat-info">
+                    <h3>@centerCount</h3>
+                    <p>Trung tâm</p>
                 </div>
             </div>
-
-            <div class="col-md-4">
-                <div class="card h-100 shadow-sm" @onclick="@(() => NavigationManager.NavigateTo("/admin/vaccines"))">
-                    <div class="card-body text-center">
-                        <span class="fs-1 mb-3 text-danger">💉</span>
-                        <h5 class="card-title">Vaccines</h5>
-                        <p class="card-text">Manage vaccine inventory and information</p>
-                    </div>
+            <div class="stat-card">
+                <div class="stat-icon bg-info-soft">
+                    <i class="bi bi-clipboard2-pulse-fill"></i>
+                </div>
+                <div class="stat-info">
+                    <h3>120+</h3>
+                    <p>Lịch hẹn</p>
                 </div>
             </div>
-
-            <div class="col-md-4">
-                <div class="card h-100 shadow-sm" @onclick="@(() => NavigationManager.NavigateTo("/admin/packages"))">
-                    <div class="card-body text-center">
-                        <span class="fs-1 mb-3 text-warning">📦</span>
-                        <h5 class="card-title">Vaccine Packages</h5>
-                        <p class="card-text">Manage vaccine packages and bundles</p>
-                    </div>
+            <div class="stat-card">
+                <div class="stat-icon bg-danger-soft">
+                    <i class="bi bi-virus"></i>
+                </div>
+                <div class="stat-info">
+                    <h3>30+</h3>
+                    <p>Vaccine</p>
                 </div>
             </div>
+        </div>
 
-            <div class="col-md-4">
-                <div class="card h-100 shadow-sm" @onclick="@(() => NavigationManager.NavigateTo("/admin/orders"))">
-                    <div class="card-body text-center">
-                        <span class="fs-1 mb-3 text-info">🛒</span>
-                        <h5 class="card-title">Orders</h5>
-                        <p class="card-text">View and manage customer orders</p>
+        <div class="dashboard-section">
+            <h3 class="section-title">Quản lý hệ thống</h3>
+            <div class="menu-cards">
+                <div class="menu-card" @onclick="@(() => NavigationManager.NavigateTo("/admin/account"))">
+                    <div class="menu-icon bg-primary">
+                        <i class="bi bi-people"></i>
+                    </div>
+                    <div class="menu-content">
+                        <h4>Quản lý tài khoản</h4>
+                        <p>Quản lý người dùng, phân quyền và cấp phép</p>
+                    </div>
+                    <div class="menu-arrow">
+                        <i class="bi bi-chevron-right"></i>
                     </div>
                 </div>
-            </div>
 
-            <div class="col-md-4">
-                <div class="card h-100 shadow-sm" @onclick="@(() => NavigationManager.NavigateTo("/admin/reports"))">
-                    <div class="card-body text-center">
-                        <span class="fs-1 mb-3 text-secondary">📊</span>
-                        <h5 class="card-title">Reports</h5>
-                        <p class="card-text">View vaccination statistics and reports</p>
+                <div class="menu-card" @onclick="@(() => NavigationManager.NavigateTo("/admin/center"))">
+                    <div class="menu-icon bg-success">
+                        <i class="bi bi-building"></i>
+                    </div>
+                    <div class="menu-content">
+                        <h4>Trung tâm tiêm chủng</h4>
+                        <p>Quản lý trung tâm tiêm chủng và địa điểm</p>
+                    </div>
+                    <div class="menu-arrow">
+                        <i class="bi bi-chevron-right"></i>
+                    </div>
+                </div>
+
+                <div class="menu-card" @onclick="@(() => NavigationManager.NavigateTo("/admin/category"))">
+                    <div class="menu-icon bg-danger">
+                        <i class="bi bi-tags"></i>
+                    </div>
+                    <div class="menu-content">
+                        <h4>Danh mục vaccine</h4>
+                        <p>Quản lý các loại vaccine và danh mục</p>
+                    </div>
+                    <div class="menu-arrow">
+                        <i class="bi bi-chevron-right"></i>
+                    </div>
+                </div>
+                
+                <div class="menu-card">
+                    <div class="menu-icon bg-info">
+                        <i class="bi bi-calendar-check"></i>
+                    </div>
+                    <div class="menu-content">
+                        <h4>Quản lý lịch hẹn</h4>
+                        <p>Xem và quản lý lịch hẹn tiêm chủng</p>
+                    </div>
+                    <div class="menu-arrow">
+                        <i class="bi bi-chevron-right"></i>
                     </div>
                 </div>
             </div>
@@ -75,23 +114,52 @@
 }
 else if (isLoading)
 {
-    <div class="d-flex justify-content-center mt-5">
+    <div class="loading-container">
         <div class="spinner-border" role="status">
-            <span class="visually-hidden">Loading...</span>
+            <span class="visually-hidden">Đang tải...</span>
         </div>
+        <p class="loading-text">Đang tải dữ liệu...</p>
     </div>
 }
 else
 {
-    <div class="alert alert-warning">Please log in as an administrator to access this page.</div>
+    <div class="alert alert-warning">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        Vui lòng đăng nhập với tài khoản quản trị để truy cập trang này.
+    </div>
 }
 
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
 @code {
     private bool isAuthenticated = false;
     private bool isLoading = true;
     private bool isFirstRender = true;
+    private int userCount = 0;
+    private int centerCount = 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDashboardData();
+    }
+
+    private async Task LoadDashboardData()
+    {
+        try
+        {
+            var accounts = AccountRepository.GetAllAccounts();
+            userCount = accounts?.Count ?? 0;
+
+            var centers = VaccineCenterRepository.GetAllVaccineCenters();
+            centerCount = centers?.Count ?? 0;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading dashboard data: {ex.Message}");
+        }
+    }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -100,7 +168,6 @@ else
             try
             {
                 var accountRole = await SessionStorage.GetItemAsStringAsync("AccountRole");
-                
                 
                 if (!string.IsNullOrEmpty(accountRole) && 
                     accountRole.Trim('"').Equals("Admin", StringComparison.OrdinalIgnoreCase))
