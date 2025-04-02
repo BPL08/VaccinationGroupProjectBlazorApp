@@ -49,6 +49,7 @@
         if (account != null)
         {
             await SessionStorage.SetItemAsync("AccountId", account.AccountId.ToString());
+            await SessionStorage.SetItemAsync("AccountRole", account.AccountRole.ToString());
            
             if (account.AccountRole == RoleEnums.Admin)
             {

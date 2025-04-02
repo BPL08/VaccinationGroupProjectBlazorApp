@@ -1,0 +1,41 @@
+@inherits LayoutComponentBase
+@inject NavigationManager NavigationManager
+@inject ISessionStorageService SessionStorage
+
+<div class="page">
+    <div class="sidebar">
+        <AdminNavbar />
+    </div>
+
+    <main>
+        <article class="content px-4">
+            @Body
+        </article>
+    </main>
+
+    @* <div class="top-row px-4">
+        <a href="/admin" class="navbar-brand">Admin Dashboard</a>
+        <div class="float-end">
+            <button class="btn btn-link" @onclick="Logout">
+                <i class="bi bi-box-arrow-left"></i> Logout
+            </button>
+        </div>
+    </div>
+
+    <div class="content px-4">
+        @Body
+    </div> *@   
+</div>
+<div id="blazor-error-ui">
+        An unhandled error has occurred.
+        <a href="" class="reload">Reload</a>
+        <a class="dismiss">🗙</a>
+    </div>
+@code {
+    private async Task Logout()
+    {
+        await SessionStorage.RemoveItemAsync("AccountId");
+        await SessionStorage.RemoveItemAsync("AccountRole");
+        NavigationManager.NavigateTo("/login", true);
+    }
+}
