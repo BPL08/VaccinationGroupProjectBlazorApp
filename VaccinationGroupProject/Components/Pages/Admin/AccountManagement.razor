@@ -1,0 +1,186 @@
+@page "/admin/account"
+@using VaccinationGroupProject.Components.Admin
+@layout AdminLayout
+@inject IAccountRepository AccountRepository
+@inject IVaccineCenterRepository VaccineCenterRepository
+@inject ISessionStorageService SessionStorage
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+@rendermode InteractiveServer
+
+@if (isAuthenticated)
+{
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h3>Manage Accounts</h3>
+            <a href="/admin/account/create" class="btn btn-primary">Create New Account</a>
+        </div>
+
+        <div class="mb-3">
+            <div class="input-group">
+                <input type="text" class="form-control" placeholder="Search by name or email" @bind="searchTerm" @bind:event="oninput" />
+                <select class="form-select" style="max-width: 200px;" @bind="roleFilter">
+                    <option value="">All Roles</option>
+                    <option value="Customer">Customer</option>
+                    <option value="Admin">Admin</option>
+                    <option value="Staff">Staff</option>                    
+                </select>
+            </div>
+        </div>
+
+        @if (accounts == null)
+        {
+            <div class="text-center">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+        }
+        else if (!filteredAccounts.Any())
+        {
+            <div class="alert alert-info">No accounts found matching your criteria.</div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Center</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var account in filteredAccounts)
+                        {
+                            <tr>
+                                <td>@account.UserName</td>
+                                <td>@account.Email</td>
+                                <td>@account.AccountRole</td>
+                                <td>@(account.Center?.Name ?? "N/A")</td>
+                                <td>
+                                    <span class="badge @(account.Status == "Active" ? "bg-success" : "bg-danger")">
+                                        @account.Status
+                                    </span>
+                                </td>
+                                <td>
+                                    <button class="btn btn-sm btn-primary me-1" @onclick="() => EditAccount(account.AccountId)">Edit</button>
+                                    <button class="btn btn-sm btn-danger" @onclick="() => DeleteAccount(account.AccountId)">Delete</button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+}
+else if (isLoading)
+{
+    <div class="d-flex justify-content-center mt-5">
+        <div class="spinner-border" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+}
+else
+{
+    <div class="alert alert-warning">Please log in as an administrator to access this page.</div>
+}
+
+@code {
+    private List<Account> accounts;
+    private List<Account> filteredAccounts => ApplyFilters();
+    private bool isAuthenticated = false;
+    private bool isLoading = true;
+    private string searchTerm = "";
+    private string roleFilter = "";
+
+    protected override void OnInitialized()
+    {
+        isLoading = true;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try
+            {
+                var accountRole = await SessionStorage.GetItemAsStringAsync("AccountRole");
+                Console.WriteLine($"Account Role: '{accountRole}'");
+
+                if (!string.IsNullOrEmpty(accountRole) && 
+                    accountRole.Trim('"').Equals("Admin", StringComparison.OrdinalIgnoreCase))
+                {
+                    isAuthenticated = true;
+                    accounts = AccountRepository.GetAllAccounts();
+                }
+                else
+                {
+                    NavigationManager.NavigateTo("/login");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error: {ex.Message}");
+                NavigationManager.NavigateTo("/login");
+            }
+            finally
+            {
+                isLoading = false;
+                StateHasChanged();
+            }
+        }
+    }
+
+    private List<Account> ApplyFilters()
+    {
+        if (accounts == null) return new List<Account>();
+
+        var result = accounts;
+
+        if (!string.IsNullOrWhiteSpace(searchTerm))
+        {
+            result = result.Where(a => 
+                a.UserName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) || 
+                a.Email.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)
+            ).ToList();
+        }
+
+        if (!string.IsNullOrWhiteSpace(roleFilter))
+        {
+            result = result.Where(a => a.AccountRole == roleFilter).ToList();
+        }
+
+        return result;
+    }
+
+    private void EditAccount(Guid accountId)
+    {
+        NavigationManager.NavigateTo($"/admin/account/edit/{accountId}");
+    }
+
+    private async Task DeleteAccount(Guid accountId)
+    {
+        bool confirmed = await JSRuntime.InvokeAsync<bool>("confirm", "Are you sure you want to delete this account?");
+        
+        if (confirmed)
+        {
+            try
+            {
+                AccountRepository.DeleteAccount(accountId);
+                accounts = AccountRepository.GetAllAccounts();
+                StateHasChanged();
+            }
+            catch (Exception)
+            {
+                // Handle error
+            }
+        }
+    }
+}

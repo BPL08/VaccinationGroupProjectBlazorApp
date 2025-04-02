@@ -28,9 +28,21 @@ namespace DAO
 
         public Account GetAccountById(Guid accountId)
         {
-            return _dbContext.Accounts
+            Console.WriteLine($"Searching for account with ID: {accountId}");
+            var account = _dbContext.Accounts
                 .Include(a => a.Center)
                 .SingleOrDefault(a => a.AccountId == accountId);
+            
+            if (account == null)
+            {
+                Console.WriteLine($"No account found with ID: {accountId}");
+            }
+            else
+            {
+                Console.WriteLine($"Found account: {account.UserName}, Email: {account.Email}, Role: {account.AccountRole}");
+            }
+            
+            return account;
         }
 
         public void AddAccount(Account account)
@@ -68,6 +80,34 @@ namespace DAO
 
                 _dbContext.Accounts.Update(existingAccount);
                 _dbContext.SaveChanges();
+            }
+        }
+
+        public void UpdateAccountDetails(Guid accountId, string username, string email, string role, string status)
+        {
+            try
+            {
+                var existingAccount = GetAccountById(accountId);
+                if (existingAccount != null)
+                {
+                    existingAccount.UserName = username;
+                    existingAccount.Email = email;
+                    existingAccount.AccountRole = role;
+                    existingAccount.Status = status;
+
+                    _dbContext.Accounts.Update(existingAccount);
+                    _dbContext.SaveChanges();
+                }
+            }
+            catch (DbUpdateException dbEx)
+            {
+                Console.WriteLine($"Database update error: {dbEx.InnerException?.Message ?? dbEx.Message}");
+                throw;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Unexpected error: {ex.Message}");
+                throw;
             }
         }
 
@@ -127,7 +167,7 @@ namespace DAO
         {
             return _dbContext.Accounts
                 .Include(a => a.Center)
-                .SingleOrDefault(a => a.Email == email && a.Password == password && a.Status == "Active");
+                .SingleOrDefault(a => a.Email == email && a.Password == password && a.Status == "ACTIVATE");
         }
     }
 }
