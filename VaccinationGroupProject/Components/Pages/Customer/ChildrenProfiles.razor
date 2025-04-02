@@ -40,8 +40,8 @@
                             </p>
                         </div>
                         <div class="card-footer d-flex justify-content-between">
-                            <button class="btn btn-outline-primary btn-sm">Edit</button>
-                            <button class="btn btn-outline-danger btn-sm">Delete</button>
+                            <button class="btn btn-outline-primary btn-sm" @onclick="() => OpenEditModal(profile)">Edit</button>
+                            <button class="btn btn-outline-danger btn-sm" @onclick="() => DeleteProfile(profile.ProfileId)">Delete</button>
                         </div>
                     </div>
                 </div>
@@ -50,6 +50,60 @@
         <div class="d-flex justify-content-between mt-4">
             <button class="btn btn-primary" @onclick="AddProfile">Add New Profile</button>
             <button class="btn btn-secondary" @onclick="GoBack">Back to Home</button>
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(Message))
+    {
+        <div class="alert @(Message.Contains("successfully") ? "alert-success" : "alert-danger") mt-3">@Message</div>
+    }
+
+    <!-- Modal chỉnh sửa -->
+    @if (showEditModal && selectedProfile != null)
+    {
+        <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5);">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Edit Profile: @selectedProfile.Name</h5>
+                        <button type="button" class="btn-close" @onclick="CloseEditModal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <EditForm Model="@editModel" OnValidSubmit="SaveProfile">
+                            <DataAnnotationsValidator />
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Name</label>
+                                <InputText @bind-Value="editModel.Name" class="form-control" />
+                                <ValidationMessage For="@(() => editModel.Name)" class="text-danger" />
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Parent Name</label>
+                                <InputText @bind-Value="editModel.ParentName" class="form-control" />
+                                <ValidationMessage For="@(() => editModel.ParentName)" class="text-danger" />
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Gender</label>
+                                <InputSelect @bind-Value="editModel.Gender" class="form-select">
+                                    <option value="">Select Gender</option>
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                    <option value="Other">Other</option>
+                                </InputSelect>
+                                <ValidationMessage For="@(() => editModel.Gender)" class="text-danger" />
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Date of Birth</label>
+                                <InputDate @bind-Value="editModel.DateOfBirth" class="form-control" />
+                                <ValidationMessage For="@(() => editModel.DateOfBirth)" class="text-danger" />
+                            </div>
+                            <div class="d-flex justify-content-end">
+                                <button type="submit" class="btn btn-primary me-2">Save</button>
+                                <button type="button" class="btn btn-secondary" @onclick="CloseEditModal">Cancel</button>
+                            </div>
+                        </EditForm>
+                    </div>
+                </div>
+            </div>
         </div>
     }
 </div>
@@ -62,6 +116,10 @@
     private bool hasRendered = false;
     private bool isAuthorized = false;
     private List<ChildrenProfile> childrenProfiles;
+    private string Message;
+    private bool showEditModal = false;
+    private ChildrenProfile selectedProfile;
+    private EditProfileModel editModel;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -95,12 +153,90 @@
 
     private void AddProfile()
     {
-        // Logic để thêm profile mới (có thể chuyển hướng đến form thêm profile)
         Navigation.NavigateTo("/customer/children-profiles/add");
     }
 
     private void GoBack()
     {
         Navigation.NavigateTo("/customer/home");
+    }
+
+    private void OpenEditModal(ChildrenProfile profile)
+    {
+        selectedProfile = profile;
+        editModel = new EditProfileModel
+            {
+                Name = profile.Name,
+                ParentName = profile.ParentName,
+                Gender = profile.Gender,
+                DateOfBirth = profile.DateOfBirth
+            };
+        showEditModal = true;
+        StateHasChanged();
+    }
+
+    private void CloseEditModal()
+    {
+        showEditModal = false;
+        selectedProfile = null;
+        editModel = null;
+        StateHasChanged();
+    }
+
+    private void SaveProfile()
+    {
+        try
+        {
+            var updatedProfile = new ChildrenProfile
+                {
+                    ProfileId = selectedProfile.ProfileId,
+                    FKAccountId = selectedProfile.FKAccountId,
+                    Name = editModel.Name,
+                    ParentName = editModel.ParentName,
+                    Gender = editModel.Gender,
+                    DateOfBirth = editModel.DateOfBirth,
+                    Status = selectedProfile.Status // Giữ nguyên trạng thái
+                };
+
+            ChildrenProfileRepository.UpdateProfile(selectedProfile.ProfileId, updatedProfile);
+            childrenProfiles = ChildrenProfileRepository.GetProfilesByAccountId(selectedProfile.FKAccountId);
+            Message = "Profile updated successfully!";
+            CloseEditModal();
+        }
+        catch (Exception ex)
+        {
+            Message = $"Error updating profile: {ex.Message}";
+        }
+        StateHasChanged();
+    }
+
+    private void DeleteProfile(Guid profileId)
+    {
+        try
+        {
+            ChildrenProfileRepository.DeleteProfile(profileId);
+            childrenProfiles = ChildrenProfileRepository.GetProfilesByAccountId(childrenProfiles.First().FKAccountId);
+            Message = "Profile deleted successfully!";
+        }
+        catch (Exception ex)
+        {
+            Message = $"Error deleting profile: {ex.Message}";
+        }
+        StateHasChanged();
+    }
+
+    public class EditProfileModel
+    {
+        [Required(ErrorMessage = "Name is required.")]
+        public string Name { get; set; }
+
+        [Required(ErrorMessage = "Parent name is required.")]
+        public string ParentName { get; set; }
+
+        [Required(ErrorMessage = "Gender is required.")]
+        public string Gender { get; set; }
+
+        [Required(ErrorMessage = "Date of birth is required.")]
+        public DateTime DateOfBirth { get; set; }
     }
 }
