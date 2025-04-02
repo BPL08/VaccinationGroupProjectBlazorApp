@@ -1,0 +1,46 @@
+﻿@inject NavigationManager Navigation
+
+<nav class="col-md-3 col-lg-2 bg-light vh-100 position-sticky top-0 p-3">
+    <h4 class="mb-3">Admin Portal</h4>
+    <ul class="nav flex-column">
+        <li class="nav-item mb-2">
+            <button class="btn btn-primary w-75 text-start" @onclick="@NavigateToDashboard">
+                Dashboard
+            </button>
+        </li>
+        <li class="nav-item mb-2">
+            <button class="btn btn-primary w-75 text-start" @onclick="@NavigateToUsers">
+                Account
+            </button>
+        </li>
+        <li class="nav-item mb-2">
+            <button class="btn btn-primary w-75 text-start" @onclick="@NavigateToSettings">
+                Settings
+            </button>
+        </li>
+        <li class="nav-item mb-2">
+            <button class="btn btn-primary w-75 text-start" @onclick="@NavigateToCenter">
+                Centers
+            </button>
+        </li>
+        <li class="nav-item mb-2 mt-auto">
+            <button class="btn btn-danger w-75 text-start" @onclick="Logout">
+                Log Out
+            </button>
+        </li>
+    </ul>
+</nav>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+@code {
+    private void NavigateToDashboard() => NavigateTo("dashboard");
+    private void NavigateToUsers() => NavigateTo("account");
+    private void NavigateToSettings() => NavigateTo("settings");
+    private void NavigateToCenter() => NavigateTo("center");
+    private void Logout() => Navigation.NavigateTo("/login");
+
+    private void NavigateTo(string page)
+    {
+        Navigation.NavigateTo($"/admin/{page}");
+    }
+}
