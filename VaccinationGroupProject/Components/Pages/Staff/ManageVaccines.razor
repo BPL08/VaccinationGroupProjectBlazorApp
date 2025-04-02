@@ -5,8 +5,7 @@
 @inject IVaccineBatchRepository VaccineBatchRepository
 @inject IVaccineCategoryRepository VaccineCategoryRepository
 @inject IWebHostEnvironment WebHostEnvironment
-@using BO.Entity
-@using BO.Enums
+
 @rendermode InteractiveServer
 
 <div class="container-fluid">
@@ -197,6 +196,7 @@
             }
 
             <!-- Update Vaccine Modal -->
+            <!-- Update Vaccine Modal -->
             @if (showUpdateModal)
             {
                 <div class="modal fade show d-block" tabindex="-1" @onclick="CloseModal">
@@ -207,6 +207,10 @@
                                 <button type="button" class="btn-close" @onclick="CloseModal"></button>
                             </div>
                             <div class="modal-body">
+                                @if (!string.IsNullOrEmpty(errorMessage))
+                                {
+                                    <div class="alert alert-danger">@errorMessage</div>
+                                }
                                 <EditForm Model="@selectedVaccine" OnValidSubmit="HandleUpdateVaccine" enctype="multipart/form-data">
                                     <DataAnnotationsValidator />
                                     <ValidationSummary class="text-danger" />
@@ -214,6 +218,15 @@
                                         <label class="form-label">Name</label>
                                         <InputText @bind-Value="selectedVaccine.Name" class="form-control" />
                                         <ValidationMessage For="@(() => selectedVaccine.Name)" class="text-danger" />
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Status</label>
+                                        <InputSelect @bind-Value="selectedVaccine.Status" class="form-control">
+                                            <option value="">Select Status</option>
+                                            <option value="@ActivationEnums.ACTIVATE">Activate</option>
+                                            <option value="@ActivationEnums.DEACTIVATE">Deactivate</option>
+                                        </InputSelect>
+                                        <ValidationMessage For="@(() => selectedVaccine.Status)" class="text-danger" />
                                     </div>
                                     <div class="mb-3">
                                         <label class="form-label">Image</label>
@@ -242,13 +255,13 @@
                     </div>
                 </div>
             }
+            }
         </main>
     </div>
 </div>
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
 @code {
     [Parameter]
     public int BatchId { get; set; }
@@ -263,7 +276,8 @@
     private Vaccine selectedVaccine;
     private IBrowserFile selectedFile;
     private string imagePreviewUrl;
-    private const string ImageBasePath = "/VaccinationGroupProject/Picture/";
+    private const string ImageFolder = "Picture"; // Subdirectory in wwwroot
+    private string errorMessage; // For debugging
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -304,6 +318,7 @@
         }
         catch (Exception ex)
         {
+            errorMessage = $"Error loading data: {ex.Message}";
             vaccines = new List<Vaccine>();
             categories = new List<VaccineCategory>();
             StateHasChanged();
@@ -328,7 +343,7 @@
                 IngredientsDescription = vaccine.IngredientsDescription,
                 FKCategoryId = vaccine.FKCategoryId,
                 FKBatchId = vaccine.FKBatchId,
-                Status = vaccine.Status,
+                Status = vaccine.Status, // Ensure Status is copied
                 UnitOfVolume = vaccine.UnitOfVolume,
                 MinAge = vaccine.MinAge,
                 MaxAge = vaccine.MaxAge,
@@ -348,44 +363,77 @@
         showUpdateModal = false;
         selectedFile = null;
         imagePreviewUrl = null;
+        errorMessage = null;
     }
 
     private async Task HandleAddVaccine()
     {
-        if (selectedFile != null)
+        try
         {
-            var fileName = $"{Guid.NewGuid()}_{selectedFile.Name}";
-            var filePath = Path.Combine(WebHostEnvironment.WebRootPath, "VaccinationGroupProject", "Picture", fileName);
-            Directory.CreateDirectory(Path.GetDirectoryName(filePath)); // Ensure directory exists
-            using (var stream = new FileStream(filePath, FileMode.Create))
+            if (selectedFile != null)
             {
-                await selectedFile.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024).CopyToAsync(stream); // 10MB limit
+                var fileName = await SaveImageFile(selectedFile);
+                newVaccine.Image = fileName;
             }
-            newVaccine.Image = $"{ImageBasePath}{fileName}";
-        }
 
-        VaccineRepository.AddVaccine(newVaccine);
-        showAddModal = false;
-        await LoadData();
+            VaccineRepository.AddVaccine(newVaccine);
+            showAddModal = false;
+            await LoadData();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error adding vaccine: {ex.Message}";
+            StateHasChanged();
+        }
     }
 
     private async Task HandleUpdateVaccine()
     {
-        if (selectedFile != null)
+        try
         {
-            var fileName = $"{Guid.NewGuid()}_{selectedFile.Name}";
-            var filePath = Path.Combine(WebHostEnvironment.WebRootPath, "VaccinationGroupProject", "Picture", fileName);
-            Directory.CreateDirectory(Path.GetDirectoryName(filePath)); // Ensure directory exists
-            using (var stream = new FileStream(filePath, FileMode.Create))
+            if (selectedFile != null)
             {
-                await selectedFile.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024).CopyToAsync(stream); // 10MB limit
+                if (!string.IsNullOrEmpty(selectedVaccine.Image))
+                {
+                    DeleteImageFile(selectedVaccine.Image);
+                }
+                var fileName = await SaveImageFile(selectedFile);
+                selectedVaccine.Image = fileName;
             }
-            selectedVaccine.Image = $"{ImageBasePath}{fileName}";
-        }
 
-        VaccineRepository.UpdateVaccine(selectedVaccine.VaccineId, selectedVaccine);
-        showUpdateModal = false;
-        await LoadData();
+            // Log for debugging
+            Console.WriteLine($"Updating Vaccine ID: {selectedVaccine.VaccineId}, Name: {selectedVaccine.Name}, Status: {selectedVaccine.Status}, Image: {selectedVaccine.Image}");
+
+            VaccineRepository.UpdateVaccine(selectedVaccine.VaccineId, selectedVaccine);
+            showUpdateModal = false;
+            await LoadData();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error updating vaccine: {ex.Message}";
+            StateHasChanged();
+        }
+    }
+
+    private async Task<string> SaveImageFile(IBrowserFile file)
+    {
+        var fileName = $"{Guid.NewGuid()}_{file.Name}";
+        var filePath = Path.Combine(WebHostEnvironment.WebRootPath, ImageFolder, fileName);
+        Directory.CreateDirectory(Path.GetDirectoryName(filePath));
+        using (var stream = new FileStream(filePath, FileMode.Create))
+        {
+            await file.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024).CopyToAsync(stream);
+        }
+        return fileName;
+    }
+
+    private void DeleteImageFile(string fileName)
+    {
+        var filePath = Path.Combine(WebHostEnvironment.WebRootPath, ImageFolder, fileName);
+        if (File.Exists(filePath))
+        {
+            File.Delete(filePath);
+        }
     }
 
     private async Task HandleFileSelected(InputFileChangeEventArgs e)
@@ -403,28 +451,15 @@
 
     private async Task HandleUpdateFileSelected(InputFileChangeEventArgs e)
     {
-        selectedFile = e.File;
-        if (selectedFile != null)
-        {
-            var memoryStream = new MemoryStream();
-            await selectedFile.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024).CopyToAsync(memoryStream);
-            var buffer = memoryStream.ToArray();
-            imagePreviewUrl = $"data:{selectedFile.ContentType};base64,{Convert.ToBase64String(buffer)}";
-            StateHasChanged();
-        }
+        await HandleFileSelected(e);
     }
 
-    private string GetImageUrl(string imagePath)
+    private string GetImageUrl(string imageFileName)
     {
-        if (string.IsNullOrEmpty(imagePath))
+        if (string.IsNullOrEmpty(imageFileName))
             return null;
 
-        // If the path already contains the base path, return it as is
-        if (imagePath.StartsWith(ImageBasePath))
-            return imagePath;
-
-        // For legacy data with just the filename, prepend the base path
-        return $"{ImageBasePath}{imagePath}";
+        return $"/{ImageFolder}/{imageFileName}";
     }
 
     private void GoBack()

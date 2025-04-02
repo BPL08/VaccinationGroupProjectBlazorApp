@@ -56,7 +56,7 @@ namespace DAO
                 existingVaccine.ExpirationDate = vaccine.ExpirationDate;
                 existingVaccine.FKCategoryId = vaccine.FKCategoryId;
                 existingVaccine.FKBatchId = vaccine.FKBatchId;
-
+                existingVaccine.Status = vaccine.Status;
                 _dbContext.Vaccines.Update(existingVaccine);
                 _dbContext.SaveChanges();
             }
