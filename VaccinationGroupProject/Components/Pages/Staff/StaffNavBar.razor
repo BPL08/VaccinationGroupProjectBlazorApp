@@ -30,6 +30,11 @@
                     Manage Vaccine Batches
                 </button>
             </li>
+            <li class="nav-item">
+                <button class="nav-link btn btn-outline-primary w-100 mb-2" @onclick="@NavigateToVaccineManagePackages">
+                    Manage Vaccine Packages
+                </button>
+            </li>
         </ul>
     </div>
 </nav>
@@ -40,6 +45,7 @@
     private void NavigateToProfile() => NavigateTo("profile");
     private void NavigateToTasks() => NavigateTo("tasks");
     private void NavigateToVaccineManageBatch() => NavigateTo("vaccinemanagebatch");
+    private void NavigateToVaccineManagePackages() => NavigateTo("vaccinepackage");
     private void NavigateTo(string page)
     {
         Navigation.NavigateTo($"/staff/{page}");

@@ -27,5 +27,6 @@ namespace Repository.Repository
                 public List<Vaccine> GetVaccinesByDiseaseType(string diseaseType) => VaccineDAO.Instance.GetVaccinesByDiseaseType(diseaseType);*/
 
        public List<Vaccine> GetVaccinesByBatch(int batchId)=>VaccineDAO.Instance.GetVaccinesByBatch(batchId);
+        public void UpdateVaccine(int vaccineId, Vaccine vaccine) => VaccineDAO.Instance.UpdateVaccine(vaccineId, vaccine);
     }
 }
