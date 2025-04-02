@@ -77,6 +77,11 @@ namespace DAO
 
             return (centers, totalCount);
         }
+        public List<VaccineCenter> GetAllCenters()
+        {
+            return _dbContext.VaccineCenters.ToList();
+        }
+
 
         public List<VaccineCenter> GetActiveCenters()
         {
