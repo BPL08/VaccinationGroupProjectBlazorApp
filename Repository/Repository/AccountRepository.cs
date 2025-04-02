@@ -48,6 +48,21 @@ namespace Repository.Repository
             AccountDAO.Instance.AddAccount(account);
         }
 
+        public void UpdateAccountDetails(Guid accountId, string username, string email, string role, string status)
+        {
+            var existingAccountByEmail = AccountDAO.Instance.GetAccountByEmail(email);
+            if (existingAccountByEmail != null && existingAccountByEmail.AccountId != accountId)
+            {
+                throw new InvalidOperationException("Email already exists.");
+            }
 
+            var existingAccountByUsername = AccountDAO.Instance.GetAccountByUsername(username);
+            if (existingAccountByUsername != null && existingAccountByUsername.AccountId != accountId)
+            {
+                throw new InvalidOperationException("Username already exists.");
+            }
+
+            AccountDAO.Instance.UpdateAccountDetails(accountId, username, email, role, status);
+        }
     }
 }
