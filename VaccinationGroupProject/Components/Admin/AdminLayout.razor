@@ -12,25 +12,16 @@
             @Body
         </article>
     </main>
-
-    @* <div class="top-row px-4">
-        <a href="/admin" class="navbar-brand">Admin Dashboard</a>
-        <div class="float-end">
-            <button class="btn btn-link" @onclick="Logout">
-                <i class="bi bi-box-arrow-left"></i> Logout
-            </button>
-        </div>
-    </div>
-
-    <div class="content px-4">
-        @Body
-    </div> *@   
 </div>
 <div id="blazor-error-ui">
         An unhandled error has occurred.
         <a href="" class="reload">Reload</a>
         <a class="dismiss">🗙</a>
     </div>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 @code {
     private async Task Logout()
     {

@@ -12,89 +12,129 @@
 <div class="container-fluid">
     <div class="row">
         <main class="col-md-9 col-lg-10 p-4">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h3>Manage Accounts</h3>
-                <button class="btn btn-primary" @onclick="ShowAddAccountModal">Create New Account</button>
-            </div>
-
-            <div class="mb-3">
-                <div class="input-group">
-                    <input type="text" class="form-control" placeholder="Search by name or email" @bind="searchTerm" @bind:event="oninput" />
-                    <select class="form-select" style="max-width: 200px;" @bind="roleFilter">
-                        <option value="">All Roles</option>
-                        <option value="Customer">Customer</option>
-                        <option value="Admin">Admin</option>
-                        <option value="Staff">Staff</option>
-                    </select>
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary bg-gradient text-white d-flex justify-content-between align-items-center py-3">
+                    <h3 class="m-0 fw-bold"><i class="bi bi-people-fill me-2"></i>Quản lý tài khoản</h3>
+                    <button class="btn btn-light" @onclick="ShowAddAccountModal">
+                        <i class="bi bi-plus-circle me-1"></i> Tạo tài khoản mới
+                    </button>
                 </div>
-            </div>
-
-            @if (!isAuthorized && hasRendered)
-            {
-                <div class="text-danger">Unauthorized access. Redirecting to login...</div>
-            }
-            else if (accounts == null)
-            {
-                <div class="text-center">
-                    <div class="spinner-border" role="status">
-                        <span class="visually-hidden">Loading...</span>
+                
+                <div class="card-body">
+                    <div class="mb-4">
+                        <div class="input-group shadow-sm">
+                            <span class="input-group-text bg-white border-end-0">
+                                <i class="bi bi-search text-primary"></i>
+                            </span>
+                            <input type="text" class="form-control border-start-0" placeholder="Tìm kiếm theo tên hoặc email..." 
+                                   @bind="searchTerm" @bind:event="oninput" />
+                            <select class="form-select border-start-0" style="max-width: 200px;" @bind="roleFilter">
+                                <option value="">Tất cả vai trò</option>
+                                <option value="Customer">Khách hàng</option>
+                                <option value="Admin">Quản trị viên</option>
+                                <option value="Staff">Nhân viên</option>
+                            </select>
+                            <button class="btn btn-primary" @onclick="() => StateHasChanged()">
+                                <i class="bi bi-funnel-fill me-1"></i> Lọc
+                            </button>
+                        </div>
                     </div>
-                </div>
-            }
-            else if (!filteredAccounts.Any())
-            {
-                <div class="text-center p-4 bg-light border rounded">
-                    <p class="lead">No accounts found.</p>
-                </div>
-            }
-            else
-            {
-                <div class="table-responsive">
-                    <table class="table table-striped table-hover table-bordered">
-                        <thead class="table-dark">
-                            <tr>
-                                <th>ID</th>
-                                <th>Username</th>
-                                <th>Email</th>
-                                <th>Role</th>
-                                <th>Center</th>
-                                <th>Status</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var account in filteredAccounts)
-                            {
-                                <tr>
-                                    <td>@account.AccountId.ToString("N").Substring(0, 8)</td>
-                                    <td>@account.UserName</td>
-                                    <td>@account.Email</td>
-                                    <td>@account.AccountRole</td>
-                                    <td>@(account.FKCenterId.HasValue ? account.Center?.Name ?? "Loading..." : "N/A")</td>
-                                    <td>
-                                        <span class="badge @(account.Status?.ToLower() == "activate" ? "bg-success" : "bg-danger")">
-                                            @account.Status
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <button class="btn btn-sm btn-primary me-1" @onclick="() => EditAccount(account.AccountId)">Edit</button>
-                                        <button class="btn btn-sm btn-danger" @onclick="() => DeleteAccount(account.AccountId)">Delete</button>
-                                    </td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
-            }
 
+                    @if (!isAuthorized && hasRendered)
+                    {
+                        <div class="alert alert-danger">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i> Truy cập không được phép. Đang chuyển hướng...
+                        </div>
+                    }
+                    else if (accounts == null)
+                    {
+                        <div class="text-center p-5">
+                            <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+                                <span class="visually-hidden">Đang tải...</span>
+                            </div>
+                            <p class="mt-3 text-muted">Đang tải dữ liệu tài khoản...</p>
+                        </div>
+                    }
+                    else if (!filteredAccounts.Any())
+                    {
+                        <div class="text-center p-5 bg-light border rounded">
+                            <i class="bi bi-search text-muted" style="font-size: 3rem;"></i>
+                            <p class="lead mt-3">Không tìm thấy tài khoản nào.</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead class="table-light text-nowrap">
+                                    <tr>
+                                        <th scope="col" class="rounded-start">ID</th>
+                                        <th scope="col">Tên người dùng</th>
+                                        <th scope="col">Email</th>
+                                        <th scope="col">Vai trò</th>
+                                        <th scope="col">Trung tâm</th>
+                                        <th scope="col">Trạng thái</th>
+                                        <th scope="col" class="rounded-end text-center">Thao tác</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var account in filteredAccounts)
+                                    {
+                                        <tr class="border-bottom">
+                                            <td class="text-muted">@account.AccountId.ToString("N").Substring(0, 8)</td>
+                                            <td class="fw-medium">@account.UserName</td>
+                                            <td>@account.Email</td>
+                                            <td>
+                                                <span class="badge rounded-pill @GetRoleBadgeClass(account.AccountRole)">
+                                                    @account.AccountRole
+                                                </span>
+                                            </td>
+                                            <td>@(account.FKCenterId.HasValue ? account.Center?.Name ?? "Đang tải..." : "N/A")</td>
+                                            <td>
+                                                <span class="badge @(account.Status?.ToLower() == "activate" ? "bg-success" : "bg-danger") rounded-pill">
+                                                    @(account.Status?.ToLower() == "activate" ? "Hoạt động" : "Không hoạt động")
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <div class="d-flex justify-content-center gap-2">
+                                                    <button class="btn btn-sm btn-outline-primary" @onclick="() => EditAccount(account.AccountId)">
+                                                        <i class="bi bi-pencil-square"></i>
+                                                    </button>
+                                                    <button class="btn btn-sm btn-outline-danger" @onclick="() => DeleteAccount(account.AccountId)">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between align-items-center mt-3">
+                            <p class="text-muted mb-0">Hiển thị @filteredAccounts.Count tài khoản</p>
+                            <div>
+                                <button class="btn btn-sm btn-outline-primary me-2" disabled>
+                                    <i class="bi bi-chevron-left"></i> Trước
+                                </button>
+                                <button class="btn btn-sm btn-outline-primary">
+                                    Sau <i class="bi bi-chevron-right"></i>
+                                </button>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Modals remain mostly unchanged but with improved styling -->
             @if (showModal)
             {
                 <div class="modal fade show d-block" tabindex="-1" @onclick="CloseModal">
                     <div class="modal-dialog modal-dialog-centered" @onclick:stopPropagation>
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h4 class="modal-title">Add New Account</h4>
-                                <button type="button" class="btn-close" @onclick="CloseModal"></button>
+                        <div class="modal-content shadow">
+                            <div class="modal-header bg-primary text-white">
+                                <h4 class="modal-title"><i class="bi bi-person-plus me-2"></i>Thêm tài khoản mới</h4>
+                                <button type="button" class="btn-close btn-close-white" @onclick="CloseModal"></button>
                             </div>
                             <div class="modal-body">
                                 <EditForm Model="@newAccount" OnValidSubmit="HandleAddAccount">
@@ -162,14 +202,15 @@
                     </div>
                 </div>
             }
+            
             @if (showEditModal)
             {
                 <div class="modal fade show d-block" tabindex="-1" @onclick="CloseEditModal">
                     <div class="modal-dialog modal-dialog-centered" @onclick:stopPropagation>
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h4 class="modal-title">Edit Account</h4>
-                                <button type="button" class="btn-close" @onclick="CloseEditModal"></button>
+                        <div class="modal-content shadow">
+                            <div class="modal-header bg-primary text-white">
+                                <h4 class="modal-title"><i class="bi bi-pencil-square me-2"></i>Chỉnh sửa tài khoản</h4>
+                                <button type="button" class="btn-close btn-close-white" @onclick="CloseEditModal"></button>
                             </div>
                             <div class="modal-body">
                                 @if (editAccount != null)
@@ -235,8 +276,51 @@
         </main>
     </div>
 </div>
+
+<!-- Add Bootstrap Icons -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<style>
+    .table th {
+        font-weight: 600;
+        color: #495057;
+    }
+    
+    .card {
+        border-radius: 0.5rem;
+        border: none;
+    }
+    
+    .card-header {
+        border-radius: 0.5rem 0.5rem 0 0 !important;
+    }
+    
+    .modal-content {
+        border-radius: 0.5rem;
+        border: none;
+    }
+    
+    .modal-header {
+        border-radius: 0.5rem 0.5rem 0 0;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        border-color: #86b7fe;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    }
+    
+    .btn-primary {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+    }
+    
+    .btn-primary:hover {
+        background-color: #0b5ed7;
+        border-color: #0a58ca;
+    }
+</style>
 
 @code {
     private bool hasRendered = false;
@@ -439,4 +523,18 @@
     {
         ShowEditModal(accountId);
     }
+
+    // Add this new method for role badge styling
+    private string GetRoleBadgeClass(string role)
+    {
+        return role switch
+        {
+            "Admin" => "bg-danger",
+            "Staff" => "bg-warning text-dark",
+            "Customer" => "bg-info text-dark",
+            _ => "bg-secondary"
+        };
+    }
+    
+    // Rest of the code remains the same
 }

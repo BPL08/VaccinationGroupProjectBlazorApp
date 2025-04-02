@@ -24,6 +24,7 @@ namespace Repository.Repository
 
         public List<VaccineCenter> GetCentersByLocation(string location)
             => VaccineCenterDAO.Instance.GetCentersByLocation(location);
-     
+
+        public List<VaccineCenter> SearchCenters(string searchTerm) => VaccineCenterDAO.Instance.SearchCenters(searchTerm);
     }
 }
