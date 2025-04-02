@@ -28,7 +28,7 @@ namespace DAO.Context
         {
             if (!optionsBuilder.IsConfigured)
             {
-                optionsBuilder.UseSqlServer("Server=(local);Database=VaccineScheduleSystem;User Id=sa;Password=12345;TrustServerCertificate=True;");
+                optionsBuilder.UseSqlServer("Server=(local);Database=VaccineScheduleSystem;User Id=sa;Password=1234567890;TrustServerCertificate=True;");
             }
         }
 
