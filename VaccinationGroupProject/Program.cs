@@ -26,6 +26,7 @@ builder.Services.AddScoped<IVaccineRepository, VaccineRepository>();
 builder.Services.AddScoped<IVaccineCategoryRepository, VaccineCategoryRepository>();
 builder.Services.AddScoped<IVaccinePackageDetailRepository, VaccinePackageDetailRepository>();
 builder.Services.AddScoped<IVaccinePackageRepository, VaccinePackageRepository>();
+builder.Services.AddScoped<IVaccineHistoryRepository, VaccineHistoryRepository>();
 builder.Services.AddBlazoredSessionStorage();
 var app = builder.Build();
 

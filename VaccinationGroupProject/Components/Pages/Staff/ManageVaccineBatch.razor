@@ -54,8 +54,14 @@
                                         </span>
                                     </td>
                                     <td>
-                                        <button class="btn btn-info btn-sm me-1" @onclick="() => ViewBatchDetails(batch.VaccineBatchId)">View Details</button>
-                                        <button class="btn btn-primary btn-sm" @onclick="() => ShowUpdateBatchModal(batch)">Edit</button>
+                                    <td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <button class="btn btn-info btn-sm" @onclick="() => ViewBatchDetails(batch.VaccineBatchId)">View Details</button>
+                                            <button class="btn btn-primary btn-sm" @onclick="() => ShowUpdateBatchModal(batch)">Edit</button>
+                                        </div>
+                                    </td>
+                                    </td>
                                     </td>
                                 </tr>
                             }

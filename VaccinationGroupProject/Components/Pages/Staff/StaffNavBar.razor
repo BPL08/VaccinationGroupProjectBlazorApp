@@ -23,6 +23,11 @@
                 </button>
             </li>
             <li class="nav-item">
+                <button class="nav-link btn btn-outline-primary w-100 mb-2" @onclick="@NavigateToManageVacineHistory">
+                    Manage History
+                </button>
+            </li>
+            <li class="nav-item">
                 <button class="nav-link btn btn-outline-secondary w-100 mb-2" @onclick="HandleLogout">
                     Logout
                 </button>
@@ -39,6 +44,7 @@
     private void NavigateToVaccineManageBatch() => NavigateTo("vaccinemanagebatch");
     private void NavigateToVaccineManagePackages() => NavigateTo("vaccinepackage");
     private void NavigateToManageSchedule() => NavigateTo("manageschedule");
+    private void NavigateToManageVacineHistory() => NavigateTo("vaccinehistorymanage");
     private void NavigateTo(string page)
     {
         Navigation.NavigateTo($"/staff/{page}");
