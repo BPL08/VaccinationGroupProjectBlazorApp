@@ -1,0 +1,78 @@
+﻿@inject IVaccinationScheduleRepository VaccinationScheduleRepository
+
+@if (ShowModal)
+{
+    <div class="modal fade show d-block" tabindex="-1" @onclick="CloseModal">
+        <div class="modal-dialog modal-dialog-centered" @onclick:stopPropagation>
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">Update Schedule: @Schedule.VaccinationScheduleId</h5>
+                    <button type="button" class="btn-close" @onclick="CloseModal"></button>
+                </div>
+                <div class="modal-body">
+                    <EditForm Model="@Schedule" OnValidSubmit="HandleUpdate">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary class="text-danger" />
+
+                        <div class="mb-3">
+                            <label class="form-label">Dose Number</label>
+                            <InputNumber @bind-Value="Schedule.DoseNumber" class="form-control" />
+                            <ValidationMessage For="@(() => Schedule.DoseNumber)" class="text-danger" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Appointment Date</label>
+                            <InputDate @bind-Value="Schedule.AppointmentDate" class="form-control" />
+                            <ValidationMessage For="@(() => Schedule.AppointmentDate)" class="text-danger" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Actual Date (Optional)</label>
+                            <InputDate @bind-Value="Schedule.ActualDate" class="form-control" />
+                            <ValidationMessage For="@(() => Schedule.ActualDate)" class="text-danger" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Administered By</label>
+                            <InputText @bind-Value="Schedule.AdministeredBy" class="form-control" />
+                            <ValidationMessage For="@(() => Schedule.AdministeredBy)" class="text-danger" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Status</label>
+                            <InputSelect @bind-Value="Schedule.Status" class="form-control">
+                                <option value="0">Pending</option>
+                                <option value="1">Active</option>
+                            </InputSelect>
+                            <ValidationMessage For="@(() => Schedule.Status)" class="text-danger" />
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">Save</button>
+                            <button type="button" class="btn btn-secondary" @onclick="CloseModal">Cancel</button>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public bool ShowModal { get; set; }
+    [Parameter] public VaccinationSchedule Schedule { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public EventCallback OnSave { get; set; }
+
+    private async Task HandleUpdate()
+    {
+        VaccinationScheduleRepository.UpdateVaccinationSchedule(Schedule.VaccinationScheduleId, Schedule);
+        await OnSave.InvokeAsync();
+        await CloseModal();
+    }
+
+    private async Task CloseModal()
+    {
+        await OnClose.InvokeAsync();
+    }
+}

@@ -5,26 +5,8 @@
     <div class="sidebar-sticky">
         <h4 class="mb-3">Staff Portal</h4>
         <ul class="nav flex-column">
-            <li class="nav-item">
-                <button class="nav-link btn btn-outline-primary w-100 mb-2" @onclick="@NavigateToDashboard">
-                    Dashboard
-                </button>
-            </li>
-            <li class="nav-item">
-                <button class="nav-link btn btn-outline-primary w-100 mb-2" @onclick="@NavigateToProfile">
-                    Profile
-                </button>
-            </li>
-            <li class="nav-item">
-                <button class="nav-link btn btn-outline-primary w-100 mb-2" @onclick="@NavigateToTasks">
-                    Tasks
-                </button>
-            </li>
-            <li class="nav-item">
-                <button class="nav-link btn btn-outline-secondary w-100 mb-2" @onclick="HandleLogout">
-                    Logout
-                </button>
-            </li>
+           
+          
             <li class="nav-item">
                 <button class="nav-link btn btn-outline-primary w-100 mb-2" @onclick="@NavigateToVaccineManageBatch">
                     Manage Vaccine Batches
@@ -33,6 +15,16 @@
             <li class="nav-item">
                 <button class="nav-link btn btn-outline-primary w-100 mb-2" @onclick="@NavigateToVaccineManagePackages">
                     Manage Vaccine Packages
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link btn btn-outline-primary w-100 mb-2" @onclick="@NavigateToManageSchedule">
+                    Manage Schedules
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link btn btn-outline-secondary w-100 mb-2" @onclick="HandleLogout">
+                    Logout
                 </button>
             </li>
         </ul>
@@ -46,6 +38,7 @@
     private void NavigateToTasks() => NavigateTo("tasks");
     private void NavigateToVaccineManageBatch() => NavigateTo("vaccinemanagebatch");
     private void NavigateToVaccineManagePackages() => NavigateTo("vaccinepackage");
+    private void NavigateToManageSchedule() => NavigateTo("manageschedule");
     private void NavigateTo(string page)
     {
         Navigation.NavigateTo($"/staff/{page}");
