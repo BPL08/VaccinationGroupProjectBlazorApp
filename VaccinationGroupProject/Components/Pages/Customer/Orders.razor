@@ -1,0 +1,373 @@
+﻿@page "/customer/order"
+@inject ISessionStorageService SessionStorage
+@inject NavigationManager Navigation
+@inject IAccountRepository AccountRepository
+@inject IVaccineRepository VaccineRepository
+@inject IVaccinePackageRepository VaccinePackageRepository
+@inject IVaccinePackageDetailRepository VaccinePackageDetailRepository
+@inject IOrderRepository OrderRepository
+@inject IOrderDetailRepository OrderDetailRepository
+@inject IVaccinationScheduleRepository VaccinationScheduleRepository
+@inject IChildrenProfileRepository ChildrenProfileRepository
+@using BO.Entity
+@using BO.Enums
+@rendermode InteractiveServer
+
+<div class="container mt-4">
+    <h2 class="text-center mb-4">Order a Vaccination</h2>
+
+    @if (!isAuthorized && hasRendered)
+    {
+        <div class="text-danger text-center">Unauthorized access. Redirecting to login...</div>
+    }
+    else if (vaccines == null || vaccinePackages == null || childrenProfiles == null)
+    {
+        <p class="lead text-center">Loading data...</p>
+    }
+    else
+    {
+        <!-- Vaccine lẻ -->
+        <section class="mb-5">
+            <h3>Individual Vaccines</h3>
+            @if (!vaccines.Any())
+            {
+                <p class="lead">No vaccines available.</p>
+            }
+            else
+            {
+                <div class="overflow-auto">
+                    <table class="table table-striped table-hover table-bordered">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Name</th>
+                                <th>Category</th>
+                                <th>Price (VND)</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var vaccine in vaccines)
+                            {
+                                <tr>
+                                    <td>@vaccine.Name</td>
+                                    <td>@(vaccine.Category?.CategoryName ?? "N/A")</td>
+                                    <td>@vaccine.Price</td>
+                                    <td>
+                                        <button class="btn btn-primary btn-sm" @onclick="() => AddToCart(vaccine, null)">Add to Cart</button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </section>
+
+        <!-- Gói Vaccine -->
+        <section class="mb-5">
+            <h3>Vaccine Packages</h3>
+            @if (!vaccinePackages.Any())
+            {
+                <p class="lead">No vaccine packages available.</p>
+            }
+            else
+            {
+                <div class="overflow-auto">
+                    <table class="table table-striped table-hover table-bordered">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Package Name</th>
+                                <th>Description</th>
+                                <th>Price (VND)</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var package in vaccinePackages)
+                            {
+                                var packageDetails = vaccinePackageDetails.Where(d => d.FKVaccinePackageId == package.VaccinePackageId).ToList();
+                                var totalPrice = packageDetails.Sum(d => d.PackagePrice);
+                                <tr>
+                                    <td>@package.PackageName</td>
+                                    <td>@package.PackageDescription</td>
+                                    <td>@totalPrice</td>
+                                    <td>
+                                        <button class="btn btn-primary btn-sm" @onclick="() => AddToCart(null, package)">Add to Cart</button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </section>
+
+        <!-- Giỏ hàng -->
+        <section class="mb-5">
+            <h3>Your Cart</h3>
+            @if (!cartItems.Any())
+            {
+                <p class="lead">Your cart is empty.</p>
+            }
+            else
+            {
+                <div class="overflow-auto">
+                    <table class="table table-striped table-hover table-bordered">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Name</th>
+                                <th>Price (VND)</th>
+                                <th>Appointment Date</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in cartItems)
+                            {
+                                <tr>
+                                    <td>@item.Name</td>
+                                    <td>@item.Price</td>
+                                    <td>
+                                        <InputDate @bind-Value="item.AppointmentDate" class="form-control" min="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-danger btn-sm" @onclick="() => RemoveFromCart(item)">Remove</button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                    <p><strong>Total: @cartItems.Sum(i => i.Price) VND</strong></p>
+                </div>
+                <div class="d-flex justify-content-end">
+                    <button class="btn btn-success" @onclick="CreateOrder">Create Order</button>
+                </div>
+            }
+        </section>
+
+        @if (!string.IsNullOrEmpty(Message))
+        {
+            <div class="alert @(Message.Contains("successfully") ? "alert-success" : "alert-danger") mt-3">@Message</div>
+        }
+    }
+</div>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+@code {
+    private bool hasRendered = false;
+    private bool isAuthorized = false;
+    private List<Vaccine> vaccines;
+    private List<VaccinePackage> vaccinePackages;
+    private List<VaccinePackageDetail> vaccinePackageDetails;
+    private List<ChildrenProfile> childrenProfiles;
+    private List<CartItem> cartItems = new List<CartItem>();
+    private string Message;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && !hasRendered)
+        {
+            var accountIdString = await SessionStorage.GetItemAsync<string>("AccountId");
+
+            if (string.IsNullOrEmpty(accountIdString) || !Guid.TryParse(accountIdString, out Guid accountId))
+            {
+                isAuthorized = false;
+            }
+            else
+            {
+                var account = await GetAccountDetails(accountId);
+                isAuthorized = account?.AccountRole == RoleEnums.Customer;
+            }
+
+            hasRendered = true;
+
+            if (!isAuthorized)
+            {
+                Navigation.NavigateTo("/login");
+            }
+            else
+            {
+                await LoadData();
+            }
+        }
+    }
+
+    private async Task LoadData()
+    {
+        try
+        {
+            var accountIdString = await SessionStorage.GetItemAsync<string>("AccountId");
+            Guid.TryParse(accountIdString, out Guid accountId);
+
+            vaccines = VaccineRepository.GetAllVaccines() ?? new List<Vaccine>();
+            vaccinePackages = VaccinePackageRepository.GetAllVaccinePackages() ?? new List<VaccinePackage>();
+            vaccinePackageDetails = VaccinePackageDetailRepository.GetAllVaccinePackageDetails() ?? new List<VaccinePackageDetail>();
+            childrenProfiles = ChildrenProfileRepository.GetProfilesByAccountId(accountId) ?? new List<ChildrenProfile>();
+
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            vaccines = new List<Vaccine>();
+            vaccinePackages = new List<VaccinePackage>();
+            vaccinePackageDetails = new List<VaccinePackageDetail>();
+            childrenProfiles = new List<ChildrenProfile>();
+            Message = $"Error loading data: {ex.Message}";
+            StateHasChanged();
+        }
+    }
+
+    private async Task<Account> GetAccountDetails(Guid accountId)
+    {
+        return await Task.FromResult(AccountRepository.GetAccountById(accountId));
+    }
+
+    private void AddToCart(Vaccine vaccine, VaccinePackage package)
+    {
+        if (vaccine != null)
+        {
+            cartItems.Add(new CartItem
+                {
+                    VaccineId = vaccine.VaccineId,
+                    Name = vaccine.Name,
+                    Price = vaccine.Price,
+                    AppointmentDate = DateTime.Now // Giá trị mặc định, người dùng sẽ chỉnh sau
+                });
+        }
+        else if (package != null)
+        {
+            var packageDetails = vaccinePackageDetails.Where(d => d.FKVaccinePackageId == package.VaccinePackageId).ToList();
+            var totalPrice = packageDetails.Sum(d => d.PackagePrice);
+            cartItems.Add(new CartItem
+                {
+                    VaccinePackageId = package.VaccinePackageId,
+                    Name = package.PackageName,
+                    Price = totalPrice,
+                    AppointmentDate = DateTime.Now // Giá trị mặc định, người dùng sẽ chỉnh sau
+                });
+        }
+        StateHasChanged();
+    }
+
+    private void RemoveFromCart(CartItem item)
+    {
+        cartItems.Remove(item);
+        StateHasChanged();
+    }
+
+    private async Task CreateOrder()
+    {
+        try
+        {
+            if (!cartItems.Any())
+            {
+                Message = "Cart is empty. Please add items before creating an order.";
+                return;
+            }
+
+            if (!childrenProfiles.Any())
+            {
+                Message = "No children profiles found. Please add a profile first.";
+                Navigation.NavigateTo("/customer/children-profiles");
+                return;
+            }
+
+            var accountIdString = await SessionStorage.GetItemAsync<string>("AccountId");
+            Guid.TryParse(accountIdString, out Guid accountId);
+            var account = await GetAccountDetails(accountId);
+
+            // Tạo Order
+            var order = new Order
+                {
+                    OrderId = Guid.NewGuid(),
+                    FKProfileId = childrenProfiles.First().ProfileId, // Lấy profile đầu tiên, có thể thêm logic chọn
+                    TotalAmountPrice = cartItems.Sum(i => i.Price),
+                    TotalPaidPrice = 0,
+                    PurchaseDate = DateTime.Now,
+                    Status = 0 // Pending
+                };
+            OrderRepository.AddOrder(order);
+
+            // Tạo OrderDetails và VaccinationSchedules
+            foreach (var item in cartItems)
+            {
+                if (item.VaccineId.HasValue) // Vaccine lẻ
+                {
+                    var orderDetail = new OrderDetail
+                        {
+                            OrderDetailId = Guid.NewGuid(),
+                            FKOrderId = order.OrderId,
+                            FKVaccineId = item.VaccineId,
+                            FKVaccinePackageId = null,
+                            TotalPrice = item.Price
+                        };
+                    OrderDetailRepository.AddOrderDetail(orderDetail);
+
+                    var schedule = new VaccinationSchedule
+                        {
+                            VaccinationScheduleId = Guid.NewGuid(),
+                            FKProfileId = order.FKProfileId,
+                            FKCenterId = vaccines.First(v => v.VaccineId == item.VaccineId.Value).Batch.FKCenterId, // Lấy từ batch của vaccine
+                            FKOrderDetailsId = orderDetail.OrderDetailId,
+                            DoseNumber = 1, // Mặc định liều 1, có thể thêm logic
+                            AppointmentDate = item.AppointmentDate,
+                            ActualDate = null,
+                            AdministeredBy = "Pending", // Chưa tiêm, có thể để trống
+                            Status = 0 // Pending
+                        };
+                    VaccinationScheduleRepository.AddVaccinationSchedule(schedule);
+                }
+                else if (item.VaccinePackageId.HasValue) // Vaccine Package
+                {
+                    var packageDetails = vaccinePackageDetails.Where(d => d.FKVaccinePackageId == item.VaccinePackageId.Value).ToList();
+                    foreach (var detail in packageDetails)
+                    {
+                        var orderDetail = new OrderDetail
+                            {
+                                OrderDetailId = Guid.NewGuid(),
+                                FKOrderId = order.OrderId,
+                                FKVaccineId = detail.FKVaccineId, // Gắn VaccineId từ package
+                                FKVaccinePackageId = item.VaccinePackageId, // Gắn PackageId
+                                TotalPrice = detail.PackagePrice // Giá từng vaccine trong gói
+                            };
+                        OrderDetailRepository.AddOrderDetail(orderDetail);
+
+                        var schedule = new VaccinationSchedule
+                            {
+                                VaccinationScheduleId = Guid.NewGuid(),
+                                FKProfileId = order.FKProfileId,
+                                FKCenterId = vaccines.First(v => v.VaccineId == detail.FKVaccineId).Batch.FKCenterId, // Lấy từ batch của vaccine
+                                FKOrderDetailsId = orderDetail.OrderDetailId,
+                                DoseNumber = 1, // Mặc định liều 1
+                                AppointmentDate = item.AppointmentDate,
+                                ActualDate = null,
+                                AdministeredBy = "Pending",
+                                Status = 1 // Pending
+                            };
+                        VaccinationScheduleRepository.AddVaccinationSchedule(schedule);
+                    }
+                }
+            }
+
+            cartItems.Clear();
+            Message = "Order and schedules successfully created!";
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Message = $"Error creating order: {ex.Message}";
+            StateHasChanged();
+        }
+    }
+
+    private class CartItem
+    {
+        public int? VaccineId { get; set; }
+        public int? VaccinePackageId { get; set; }
+        public string Name { get; set; }
+        public int Price { get; set; }
+        public DateTime AppointmentDate { get; set; }
+    }
+}

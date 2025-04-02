@@ -1,0 +1,11 @@
+﻿.modal-content {
+    border-radius: 8px;
+}
+
+.modal-header {
+    font-weight: bold;
+}
+
+.form-label {
+    font-weight: 500;
+}

@@ -1,0 +1,18 @@
+﻿.modal-content {
+    border-radius: 8px;
+}
+
+.modal-header {
+    font-weight: bold;
+}
+
+dt {
+    font-weight: 500;
+}
+
+dd {
+    margin-bottom: 15px;
+
+.modal-lg {
+    max-width: 800px; 
+}

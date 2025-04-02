@@ -166,9 +166,25 @@ namespace DAO
         }
         public Account Login(string email, string password)
         {
-            return _dbContext.Accounts
-                .Include(a => a.Center)
-                .SingleOrDefault(a => a.Email == email && a.Password == password && a.Status == ActivationEnums.ACTIVATE);
+            try
+            {
+                return _dbContext.Accounts
+                    .Include(a => a.Center)
+                    .SingleOrDefault(a => a.Email == email && a.Password == password && a.Status == ActivationEnums.ACTIVATE);
+            }
+            catch (InvalidOperationException ex)
+            {
+                // This occurs if multiple records are found when using SingleOrDefault
+                Console.WriteLine($"Login error: Multiple accounts found for email {email}. {ex.Message}");
+                return null;
+            }
+            catch (Exception ex)
+            {
+                // Catch other unexpected exceptions
+                Console.WriteLine($"Login failed: {ex.Message}");
+                return null;
+            }
         }
+
     }
 }

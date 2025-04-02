@@ -54,7 +54,8 @@
                                         </span>
                                     </td>
                                     <td>
-                                        <button class="btn btn-info btn-sm" @onclick="() => ViewBatchDetails(batch.VaccineBatchId)">View Details</button>
+                                        <button class="btn btn-info btn-sm me-1" @onclick="() => ViewBatchDetails(batch.VaccineBatchId)">View Details</button>
+                                        <button class="btn btn-primary btn-sm" @onclick="() => ShowUpdateBatchModal(batch)">Edit</button>
                                     </td>
                                 </tr>
                             }
@@ -63,15 +64,15 @@
                 </div>
             }
 
-            <!-- Existing Modal Code Remains Unchanged -->
-            @if (showModal)
+            <!-- Add Modal -->
+            @if (showAddModal)
             {
-                <div class="modal fade show d-block" tabindex="-1" @onclick="CloseModal">
+                <div class="modal fade show d-block" tabindex="-1" @onclick="CloseAddModal">
                     <div class="modal-dialog modal-dialog-centered" @onclick:stopPropagation>
                         <div class="modal-content">
                             <div class="modal-header">
                                 <h4 class="modal-title">Add New Vaccine Batch</h4>
-                                <button type="button" class="btn-close" @onclick="CloseModal"></button>
+                                <button type="button" class="btn-close" @onclick="CloseAddModal"></button>
                             </div>
                             <div class="modal-body">
                                 <EditForm Model="@newBatch" OnValidSubmit="HandleAddBatch">
@@ -103,7 +104,7 @@
                                     </div>
                                     <div class="d-flex gap-2">
                                         <button type="submit" class="btn btn-primary">Save</button>
-                                        <button type="button" class="btn btn-secondary" @onclick="CloseModal">Cancel</button>
+                                        <button type="button" class="btn btn-secondary" @onclick="CloseAddModal">Cancel</button>
                                     </div>
                                 </EditForm>
                             </div>
@@ -111,6 +112,12 @@
                     </div>
                 </div>
             }
+
+            <!-- Update Modal Component -->
+            <UpdateVaccineBatchModal ShowModal="@showUpdateModal"
+                                     Batch="@selectedBatch"
+                                     OnClose="CloseUpdateModal"
+                                     OnSave="RefreshData" />
         </main>
     </div>
 </div>
@@ -123,9 +130,11 @@
     private bool isAuthorized = false;
     private List<VaccineBatch> batches = new List<VaccineBatch>();
     private List<VaccineCenter> centers;
-    private bool showModal = false;
+    private bool showAddModal = false;
     private VaccineBatch newBatch = new VaccineBatch();
     private string selectedCenterId;
+    private bool showUpdateModal = false;
+    private VaccineBatch selectedBatch;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -177,12 +186,12 @@
     {
         newBatch = new VaccineBatch();
         selectedCenterId = "";
-        showModal = true;
+        showAddModal = true;
     }
 
-    private void CloseModal()
+    private void CloseAddModal()
     {
-        showModal = false;
+        showAddModal = false;
     }
 
     private async Task HandleAddBatch()
@@ -192,7 +201,30 @@
             newBatch.FKCenterId = int.Parse(selectedCenterId);
         }
         VaccineBatchRepository.AddVaccineBatch(newBatch);
-        showModal = false;
+        showAddModal = false;
+        await LoadData();
+    }
+
+    private void ShowUpdateBatchModal(VaccineBatch batch)
+    {
+        selectedBatch = new VaccineBatch
+            {
+                VaccineBatchId = batch.VaccineBatchId,
+                BatchNumber = batch.BatchNumber,
+                FKCenterId = batch.FKCenterId,
+                ActiveStatus = batch.ActiveStatus
+            };
+        showUpdateModal = true;
+    }
+
+    private async Task CloseUpdateModal()
+    {
+        showUpdateModal = false;
+        await Task.CompletedTask;
+    }
+
+    private async Task RefreshData()
+    {
         await LoadData();
     }
 
