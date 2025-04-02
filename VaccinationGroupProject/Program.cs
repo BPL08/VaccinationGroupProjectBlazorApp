@@ -20,7 +20,8 @@ builder.Services.AddRazorComponents()
 builder.Services.AddScoped<IAccountRepository, AccountRepository>();
 builder.Services.AddScoped<IVaccineCenterRepository, VaccineCenterRepository>();
 builder.Services.AddScoped<IVaccineBatchRepository, VaccineBatchRepository>();
-
+builder.Services.AddScoped<IChildrenProfileRepository, ChildrenProfileRepository>();
+builder.Services.AddScoped<IVaccineHistoryRepository, VaccineHistoryRepository>();
 builder.Services.AddScoped<IVaccineRepository, VaccineRepository>();
 builder.Services.AddScoped<IVaccineCategoryRepository, VaccineCategoryRepository>();
 builder.Services.AddScoped<IVaccinePackageDetailRepository, VaccinePackageDetailRepository>();
