@@ -190,7 +190,6 @@
             }
         </section>
 
-        <!-- Vaccination Handbook -->
         <section class="section-handbook my-5">
             <h2 class="section-title">Vaccination Handbook</h2>
             @if (!childrenProfiles.Any())
@@ -200,28 +199,46 @@
             }
             else
             {
-                @foreach (var profile in childrenProfiles)
-                {
-                    <div class="mb-4">
-                        <h5 class="text-primary">@profile.Name (DOB: @profile.DateOfBirth.ToShortDateString())</h5>
-                        @if (!vaccineHistories.Any(h => h.FKProfileId == profile.ProfileId))
-                        {
-                            <p>No vaccination history for this profile.</p>
-                        }
-                        else
-                        {
-                            <ul class="list-group">
-                                @foreach (var history in vaccineHistories.Where(h => h.FKProfileId == profile.ProfileId))
-                                {
-                                    <li class="list-group-item">
-                                        <strong>@history.Vaccine.Name</strong>: Administered on @history.AdministeredDate.ToShortDateString()
-                                        (Dose #@history.DosedNumber) at @history.Center.Name
-                                    </li>
-                                }
-                            </ul>
-                        }
-                    </div>
-                }
+                <div class="accordion" id="handbookAccordion">
+                    @foreach (var profile in childrenProfiles)
+                    {
+                        var profileHistories = vaccineHistories.Where(h => h.FKProfileId == profile.ProfileId).ToList();
+                        <div class="accordion-item shadow-sm mb-3">
+                            <h2 class="accordion-header" id="heading-@profile.ProfileId">
+                                <button class="accordion-button @(profileHistories.Any() ? "" : "collapsed")" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-@profile.ProfileId" aria-expanded="@(profileHistories.Any() ? "true" : "false")" aria-controls="collapse-@profile.ProfileId">
+                                    <span class="fw-bold text-primary">@profile.Name</span> <span class="text-muted ms-2">(DOB: @profile.DateOfBirth.ToShortDateString())</span>
+                                </button>
+                            </h2>
+                            <div id="collapse-@profile.ProfileId" class="accordion-collapse collapse @(profileHistories.Any() ? "show" : "")" aria-labelledby="heading-@profile.ProfileId" data-bs-parent="#handbookAccordion">
+                                <div class="accordion-body">
+                                    @if (!profileHistories.Any())
+                                    {
+                                        <p class="text-muted">No vaccination history for this profile.</p>
+                                    }
+                                    else
+                                    {
+                                        <div class="timeline">
+                                            @foreach (var history in profileHistories)
+                                            {
+                                                <div class="timeline-item">
+                                                    <div class="timeline-dot"></div>
+                                                    <div class="timeline-content card shadow-sm p-3">
+                                                        <h6 class="text-success mb-1">@history.Vaccine.Name</h6>
+                                                        <p class="mb-0">
+                                                            <strong>Date:</strong> @history.AdministeredDate.ToShortDateString() <br />
+                                                            <strong>Dose:</strong> #@history.DosedNumber <br />
+                                                            <strong>Center:</strong> @history.Center.Name
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            }
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
             }
         </section>
 

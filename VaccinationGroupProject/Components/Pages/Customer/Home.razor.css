@@ -134,4 +134,55 @@ body {
     .navbar-brand {
         font-size: 1.2rem;
     }
+
+    .accordion-button {
+        background-color: #fff;
+        color: #333;
+        border-radius: 8px 8px 0 0;
+        transition: all 0.3s ease;
+    }
+
+        .accordion-button:not(.collapsed) {
+            background-color: #e9f7ff;
+            color: #007bff;
+        }
+
+    .accordion-item {
+        border: none;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+    /* Timeline */
+    .timeline {
+        position: relative;
+        padding-left: 30px;
+    }
+
+    .timeline-item {
+        position: relative;
+        margin-bottom: 20px;
+    }
+
+    .timeline-dot {
+        position: absolute;
+        left: -25px;
+        top: 10px;
+        width: 12px;
+        height: 12px;
+        background-color: #00c4cc;
+        border-radius: 50%;
+        border: 2px solid #fff;
+        box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+    }
+
+    .timeline-content {
+        background-color: #fff;
+        border-radius: 8px;
+        transition: transform 0.3s ease;
+    }
+
+    .timeline-content:hover {
+         transform: translateX(5px);
+    }
 }

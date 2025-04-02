@@ -15,7 +15,12 @@
 @rendermode InteractiveServer
 
 <div class="container mt-5">
-    <h2 class="text-center mb-4 text-primary fw-bold">Order a Vaccination</h2>
+    <div class="d-flex align-items-center mb-4">
+        <button class="btn btn-secondary me-3" @onclick="GoBack">
+            <i class="bi bi-arrow-left"></i> Back
+        </button>
+        <h2 class="text-center mb-0 text-primary fw-bold">Order a Vaccination</h2>
+    </div>
 
     @if (!isAuthorized && hasRendered)
     {
@@ -398,6 +403,11 @@
             Message = $"Error creating order: {ex.Message}";
             StateHasChanged();
         }
+    }
+
+    private void GoBack()
+    {
+        Navigation.NavigateTo("/customer/home");
     }
 
     private class CartItem
