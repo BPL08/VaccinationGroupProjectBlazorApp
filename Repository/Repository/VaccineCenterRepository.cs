@@ -8,18 +8,20 @@ namespace Repository.Repository
     {
         public void AddVaccineCenter(VaccineCenter center) => VaccineCenterDAO.Instance.AddCenter(center);
 
-       /* public VaccineCenter GetVaccineCenterById(int centerId) => VaccineCenterDAO.Instance.GetVaccineCenterById(centerId);
+        public VaccineCenter GetVaccineCenterById(int centerId) => VaccineCenterDAO.Instance.GetCenterById(centerId);
 
-        public List<VaccineCenter> GetAllVaccineCenters() => VaccineCenterDAO.Instance.GetAllVaccineCenters();
+        public (List<VaccineCenter> Centers, int TotalCount) GetAllVaccineCenters(int pageNumber, int pageSize)
+            => VaccineCenterDAO.Instance.GetAllCenters(pageNumber, pageSize);
 
         public List<VaccineCenter> GetActiveCenters() => VaccineCenterDAO.Instance.GetActiveCenters();
 
-        public void UpdateVaccineCenter(int centerId, VaccineCenter center) => VaccineCenterDAO.Instance.UpdateVaccineCenter(centerId, center);
+        public void UpdateVaccineCenter(int centerId, VaccineCenter center)
+            => VaccineCenterDAO.Instance.UpdateCenter(centerId, center);
 
-        public void DeleteVaccineCenter(int centerId) => VaccineCenterDAO.Instance.DeleteVaccineCenter(centerId);
+        public void DeleteVaccineCenter(int centerId) => VaccineCenterDAO.Instance.DeleteCenter(centerId);
 
-        public List<VaccineCenter> GetCentersByLocation(string location) => VaccineCenterDAO.Instance.GetCentersByLocation(location);
-
-        public List<VaccineCenter> GetCentersByStatus(string status) => VaccineCenterDAO.Instance.GetCentersByStatus(status);*/
+        public List<VaccineCenter> GetCentersByLocation(string location)
+            => VaccineCenterDAO.Instance.GetCentersByLocation(location);
+     
     }
 }
