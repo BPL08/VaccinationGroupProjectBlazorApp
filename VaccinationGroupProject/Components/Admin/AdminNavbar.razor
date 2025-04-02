@@ -1,65 +1,97 @@
 @inject NavigationManager NavigationManager
 @inject ISessionStorageService SessionStorage
+@inject IJSRuntime JSRuntime
 
-<nav class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="/admin">Admin Dashboard</a>
-        <input type="checkbox" title="Navigation menu" class="navbar-toggler" />
+<div class="admin-sidebar @(isSidebarCollapsed ? "collapsed" : "")">
+    <div class="sidebar-header">
+        <div class="logo-container">
+            <i class="bi bi-shield-lock-fill logo-icon"></i>
+            <span class="logo-text">VacciCare</span>
+        </div>
+        <button class="mobile-toggle" @onclick="ToggleSidebar">
+            <i class="bi bi-list"></i>
+        </button>
     </div>
-</nav>
 
-<div class="nav-scrollable">
-    <nav class="flex-column">
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/admin" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Dashboard
-            </NavLink>
+    <div class="user-profile">
+        <div class="avatar">
+            <i class="bi bi-person-circle"></i>
+        </div>
+        <div class="user-info">
+            <h5>Admin</h5>
+            <span>Quản trị viên</span>
+        </div>
+    </div>
+
+    <div class="nav-divider">
+        <span>MENU CHÍNH</span>
+    </div>
+
+    <div class="sidebar-nav">
+        <NavLink class="nav-item" href="/admin" Match="NavLinkMatch.All">
+            <i class="bi bi-speedometer2 nav-icon"></i>
+            <span class="nav-text">Bảng điều khiển</span>
+        </NavLink>
+
+        <NavLink class="nav-item" href="/admin/account">
+            <i class="bi bi-people-fill nav-icon"></i>
+            <span class="nav-text">Quản lý tài khoản</span>
+        </NavLink>
+
+        <NavLink class="nav-item" href="/admin/center">
+            <i class="bi bi-hospital-fill nav-icon"></i>
+            <span class="nav-text">Trung tâm tiêm chủng</span>
+        </NavLink>
+
+        <NavLink class="nav-item" href="/admin/category">
+            <i class="bi bi-tags-fill nav-icon"></i>
+            <span class="nav-text">Danh mục vaccine</span>
+        </NavLink>
+
+        <div class="nav-divider">
+            <span>HỆ THỐNG</span>
         </div>
 
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/admin/account">
-                <span class="bi bi-people-fill" aria-hidden="true"></span> Accounts
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/admin/centers">
-                <span class="bi bi-hospital" aria-hidden="true"></span> Vaccination Centers
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/admin/vaccines">
-                <span class="bi bi-syringe" aria-hidden="true"></span> Vaccines
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/admin/packages">
-                <span class="bi bi-box-seam" aria-hidden="true"></span> Vaccine Packages
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/admin/orders">
-                <span class="bi bi-receipt" aria-hidden="true"></span> Orders
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3 mt-auto">
-            <button class="btn btn-outline-light w-100" @onclick="Logout">
-                <span class="bi bi-box-arrow-right" aria-hidden="true"></span> Logout
-            </button>
-        </div>
-    </nav>
+        <button class="nav-item logout-btn" @onclick="LogoutHandler">
+            <i class="bi bi-box-arrow-right nav-icon"></i>
+            <span class="nav-text">Đăng xuất</span>
+        </button>
+    </div>
 </div>
 
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
 @code {
-    private async Task Logout()
+    private bool isSidebarCollapsed = false;
+
+    private void ToggleSidebar()
     {
-        Console.WriteLine("Logout method called");
-        await SessionStorage.RemoveItemAsync("AccountId");
-        await SessionStorage.RemoveItemAsync("AccountRole");
-        NavigationManager.NavigateTo("/login", true);
+        isSidebarCollapsed = !isSidebarCollapsed;
+        StateHasChanged();
+    }
+
+    private async Task LogoutHandler()
+    {
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("console.log", "Logout method called");
+            
+            // Xóa dữ liệu phiên
+            await SessionStorage.RemoveItemAsync("AccountId");
+            await SessionStorage.RemoveItemAsync("AccountRole");
+            await SessionStorage.RemoveItemAsync("Username");
+            
+            // Đảm bảo dữ liệu đã được xóa
+            await JSRuntime.InvokeVoidAsync("console.log", "Session data cleared");
+            
+            // Chuyển hướng về trang đăng nhập
+            NavigationManager.NavigateTo("/login", true);
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.InvokeVoidAsync("console.error", $"Logout error: {ex.Message}");
+            await JSRuntime.InvokeVoidAsync("alert", $"Đã xảy ra lỗi khi đăng xuất: {ex.Message}");
+        }
     }
 }

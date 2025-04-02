@@ -15,6 +15,9 @@ namespace Repository.Interface
         List<VaccinationSchedule> GetVaccinationSchedulesByStatus(int status);
         void UpdateVaccinationSchedule(Guid scheduleId, VaccinationSchedule schedule);
         void DeleteVaccinationSchedule(Guid scheduleId);
-       /* List<VaccinationSchedule> GetVaccinationSchedulesByOrderDetail(Guid orderDetailId);*/
+        List<VaccinationSchedule> GetVaccinationSchedulesByProfileName(string profileName); // New method
+        List<VaccinationSchedule> GetVaccinationSchedulesByCenterName(string centerName); // New method
+        OrderDetail GetOrderDetailByVaccinationScheduleId(Guid vaccinationScheduleId); // New met
+        /* List<VaccinationSchedule> GetVaccinationSchedulesByOrderDetail(Guid orderDetailId);*/
     }
 }

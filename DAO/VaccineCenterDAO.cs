@@ -96,5 +96,20 @@ namespace DAO
                 .Where(vc => vc.Location.Contains(location))
                 .ToList();
         }
+
+        public List<VaccineCenter> SearchCenters(string searchTerm)
+        {
+            if (string.IsNullOrWhiteSpace(searchTerm))
+                return GetAllCenters();
+
+            return _dbContext.VaccineCenters
+                .Where(vc => 
+                    vc.Name.Contains(searchTerm) ||
+                    vc.Location.Contains(searchTerm) ||
+                    vc.Email.Contains(searchTerm) ||
+                    vc.ContactNumber.ToString().Contains(searchTerm)
+                )
+                .ToList();
+        }
     }
 }

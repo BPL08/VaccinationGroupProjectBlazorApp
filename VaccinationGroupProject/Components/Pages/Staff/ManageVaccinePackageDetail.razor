@@ -44,6 +44,7 @@
                                 <th scope="col">Vaccine</th>
                                 <th scope="col">Package</th>
                                 <th scope="col">Price</th>
+                                <th scope="col">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -54,6 +55,9 @@
                                     <td>@(detail.Vaccine?.Name ?? "N/A")</td>
                                     <td>@(detail.VaccinePackage?.PackageName ?? "N/A")</td>
                                     <td>@detail.PackagePrice</td>
+                                    <td>
+                                        <button class="btn btn-warning btn-sm" @onclick="() => ShowUpdateDetailModal(detail)">Update</button>
+                                    </td>
                                 </tr>
                             }
                         </tbody>
@@ -61,7 +65,8 @@
                 </div>
             }
 
-            @if (showModal)
+            <!-- Add Detail Modal -->
+            @if (showAddModal)
             {
                 <div class="modal fade show d-block" tabindex="-1" @onclick="CloseModal">
                     <div class="modal-dialog modal-dialog-centered" @onclick:stopPropagation>
@@ -71,30 +76,29 @@
                                 <button type="button" class="btn-close" @onclick="CloseModal"></button>
                             </div>
                             <div class="modal-body">
-                                <EditForm Model="@newDetail" OnValidSubmit="HandleAddDetail">
-                                    <DataAnnotationsValidator />
-                                    <ValidationSummary class="text-danger" />
-                                    <div class="mb-3">
-                                        <label class="form-label">Vaccine</label>
-                                        <InputSelect @bind-Value="newDetail.FKVaccineId" class="form-control">
-                                            <option value="">Select Vaccine</option>
-                                            @foreach (var vaccine in vaccines)
-                                            {
-                                                <option value="@vaccine.VaccineId">@vaccine.Name</option>
-                                            }
-                                        </InputSelect>
-                                        <ValidationMessage For="@(() => newDetail.FKVaccineId)" class="text-danger" />
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label">Price</label>
-                                        <InputNumber @bind-Value="newDetail.PackagePrice" class="form-control" />
-                                        <ValidationMessage For="@(() => newDetail.PackagePrice)" class="text-danger" />
-                                    </div>
-                                    <div class="d-flex gap-2">
-                                        <button type="submit" class="btn btn-primary">Save</button>
-                                        <button type="button" class="btn btn-secondary" @onclick="CloseModal">Cancel</button>
-                                    </div>
-                                </EditForm>
+                                <VaccinePackageDetailForm Detail="newDetail" Vaccines="vaccines" OnSubmit="HandleAddDetail" OnCancel="CloseModal" SubmitButtonText="Save" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <!-- Update Detail Modal -->
+            @if (showUpdateModal)
+            {
+                <div class="modal fade show d-block" tabindex="-1" @onclick="CloseModal">
+                    <div class="modal-dialog modal-dialog-centered" @onclick:stopPropagation>
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h4 class="modal-title">Update Vaccine Package Detail #@selectedDetail.VaccinePackageDetailId.ToString("N").Substring(0, 8)</h4>
+                                <button type="button" class="btn-close" @onclick="CloseModal"></button>
+                            </div>
+                            <div class="modal-body">
+                                @if (!string.IsNullOrEmpty(errorMessage))
+                                {
+                                    <div class="alert alert-danger">@errorMessage</div>
+                                }
+                                <VaccinePackageDetailForm Detail="selectedDetail" Vaccines="vaccines" OnSubmit="HandleUpdateDetail" OnCancel="CloseModal" SubmitButtonText="Update" IsUpdate="true" />
                             </div>
                         </div>
                     </div>
@@ -103,29 +107,6 @@
         </main>
     </div>
 </div>
-
-<style>
-    .custom-table {
-        border-radius: 8px;
-        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    }
-
-        .custom-table th, .custom-table td {
-            padding: 12px;
-            vertical-align: middle;
-        }
-
-        .custom-table thead th {
-            background-color: #007bff;
-            color: white;
-            border-bottom: 2px solid #0056b3;
-        }
-
-        .custom-table tbody tr:hover {
-            background-color: #f1f8ff;
-            transition: background-color 0.2s;
-        }
-</style>
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -138,8 +119,11 @@
     private bool isAuthorized = false;
     private List<VaccinePackageDetail> details;
     private List<Vaccine> vaccines;
-    private bool showModal = false;
+    private bool showAddModal = false;
+    private bool showUpdateModal = false;
     private VaccinePackageDetail newDetail = new VaccinePackageDetail();
+    private VaccinePackageDetail selectedDetail;
+    private string errorMessage;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -180,6 +164,7 @@
         }
         catch (Exception ex)
         {
+            errorMessage = $"Error loading data: {ex.Message}";
             details = new List<VaccinePackageDetail>();
             vaccines = new List<Vaccine>();
             StateHasChanged();
@@ -189,19 +174,62 @@
     private void ShowAddDetailModal()
     {
         newDetail = new VaccinePackageDetail { FKVaccinePackageId = PackageId };
-        showModal = true;
+        showAddModal = true;
+    }
+
+    private void ShowUpdateDetailModal(VaccinePackageDetail detail)
+    {
+        selectedDetail = new VaccinePackageDetail
+        {
+            VaccinePackageDetailId = detail.VaccinePackageDetailId,
+            FKVaccineId = detail.FKVaccineId, // Keep this fixed
+            FKVaccinePackageId = detail.FKVaccinePackageId,
+            PackagePrice = detail.PackagePrice
+        };
+        showUpdateModal = true;
     }
 
     private void CloseModal()
     {
-        showModal = false;
+        showAddModal = false;
+        showUpdateModal = false;
+        errorMessage = null;
     }
 
     private async Task HandleAddDetail()
     {
-        VaccinePackageDetailRepository.AddVaccinePackageDetail(newDetail);
-        showModal = false;
-        await LoadData();
+        try
+        {
+            VaccinePackageDetailRepository.AddVaccinePackageDetail(newDetail);
+            showAddModal = false;
+            await LoadData();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error adding detail: {ex.Message}";
+            StateHasChanged();
+        }
+    }
+
+    private async Task HandleUpdateDetail()
+    {
+        try
+        {
+           
+            var originalDetail = VaccinePackageDetailRepository.GetVaccinePackageDetailById(selectedDetail.VaccinePackageDetailId);
+            if (originalDetail != null)
+            {
+                selectedDetail.FKVaccineId = originalDetail.FKVaccineId; 
+            }
+            VaccinePackageDetailRepository.UpdateVaccinePackageDetail(selectedDetail.VaccinePackageDetailId, selectedDetail);
+            showUpdateModal = false;
+            await LoadData();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error updating detail: {ex.Message}";
+            StateHasChanged();
+        }
     }
 
     private void GoBack()
