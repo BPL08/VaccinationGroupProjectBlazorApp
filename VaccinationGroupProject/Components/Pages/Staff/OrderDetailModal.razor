@@ -1,0 +1,91 @@
+﻿@if (ShowModal && OrderDetail != null)
+{
+    <div class="modal fade show d-block" tabindex="-1" @onclick="CloseModal">
+        <div class="modal-dialog modal-dialog-centered modal-lg" @onclick:stopPropagation>
+            <div class="modal-content">
+                <div class="modal-header bg-info text-white">
+                    <h5 class="modal-title">Order Detail: @OrderDetail.OrderDetailId</h5>
+                    <button type="button" class="btn-close" @onclick="CloseModal"></button>
+                </div>
+                <div class="modal-body">
+                    <dl class="row">
+                        <dt class="col-sm-4">Order Detail ID</dt>
+                        <dd class="col-sm-8">@OrderDetail.OrderDetailId</dd>
+
+                        <dt class="col-sm-4">Total Price</dt>
+                        <dd class="col-sm-8">@OrderDetail.TotalPrice</dd>
+
+                        @if (OrderDetail.Vaccine != null)
+                        {
+                            <dt class="col-sm-4">Vaccine Name</dt>
+                            <dd class="col-sm-8">@OrderDetail.Vaccine.Name</dd>
+
+                            <dt class="col-sm-4">Vaccine Status</dt>
+                            <dd class="col-sm-8">@OrderDetail.Vaccine.Status</dd>
+
+                            <dt class="col-sm-4">Unit of Volume</dt>
+                            <dd class="col-sm-8">@OrderDetail.Vaccine.UnitOfVolume</dd>
+
+                            <dt class="col-sm-4">Ingredients Description</dt>
+                            <dd class="col-sm-8">@(OrderDetail.Vaccine.IngredientsDescription ?? "N/A")</dd>
+
+                            <dt class="col-sm-4">Min Age</dt>
+                            <dd class="col-sm-8">@OrderDetail.Vaccine.MinAge</dd>
+
+                            <dt class="col-sm-4">Max Age</dt>
+                            <dd class="col-sm-8">@OrderDetail.Vaccine.MaxAge</dd>
+
+                            <dt class="col-sm-4">Between Period</dt>
+                            <dd class="col-sm-8">@OrderDetail.Vaccine.BetweenPeriod.ToString("MMM dd, yyyy")</dd>
+
+                            <dt class="col-sm-4">Price</dt>
+                            <dd class="col-sm-8">@OrderDetail.Vaccine.Price</dd>
+
+                            <dt class="col-sm-4">Production Date</dt>
+                            <dd class="col-sm-8">@OrderDetail.Vaccine.ProductionDate.ToString("MMM dd, yyyy")</dd>
+
+                            <dt class="col-sm-4">Expiration Date</dt>
+                            <dd class="col-sm-8">@OrderDetail.Vaccine.ExpirationDate.ToString("MMM dd, yyyy")</dd>
+                        }
+                        else
+                        {
+                            <dt class="col-sm-4">Vaccine</dt>
+                            <dd class="col-sm-8">N/A</dd>
+                        }
+
+                        @if (OrderDetail.VaccinePackage != null)
+                        {
+                            <dt class="col-sm-4">Vaccine Package Name</dt>
+                            <dd class="col-sm-8">@OrderDetail.VaccinePackage.PackageName</dd>
+
+                            <dt class="col-sm-4">Package Description</dt>
+                            <dd class="col-sm-8">@(OrderDetail.VaccinePackage.PackageDescription ?? "N/A")</dd>
+
+                            <dt class="col-sm-4">Package Status</dt>
+                            <dd class="col-sm-8">@(OrderDetail.VaccinePackage.PackageStatus == 1 ? "Active" : "Inactive")</dd>
+                        }
+                        else
+                        {
+                            <dt class="col-sm-4">Vaccine Package</dt>
+                            <dd class="col-sm-8">N/A</dd>
+                        }
+                    </dl>
+                    <div class="d-flex justify-content-end">
+                        <button type="button" class="btn btn-secondary" @onclick="CloseModal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public bool ShowModal { get; set; }
+    [Parameter] public OrderDetail OrderDetail { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+
+    private async Task CloseModal()
+    {
+        await OnClose.InvokeAsync();
+    }
+}

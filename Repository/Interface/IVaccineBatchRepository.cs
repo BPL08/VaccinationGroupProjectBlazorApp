@@ -17,5 +17,6 @@ namespace Repository.Interface
           List<VaccineBatch> GetAvailableVaccineBatches();
           List<VaccineBatch> GetVaccineBatchesByManufacturer(string manufacturer);*/
         List<VaccineBatch> GetAllVaccineBatches() => VaccineBatchDAO.Instance.GetAllVaccineBatches();
+        void UpdateVaccineBatch(int batchId, VaccineBatch batch) => VaccineBatchDAO.Instance.UpdateVaccineBatch(batchId, batch);
     }
 }

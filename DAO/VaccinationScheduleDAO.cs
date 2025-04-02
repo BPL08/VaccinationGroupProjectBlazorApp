@@ -118,5 +118,43 @@ namespace DAO
                 .Where(vs => vs.Status == status)
                 .ToList();
         }
+        public List<VaccinationSchedule> GetSchedulesByProfileName(string profileName)
+        {
+            if (string.IsNullOrWhiteSpace(profileName))
+                return GetAllSchedules();
+
+            return _dbContext.VaccinationSchedules
+                .Include(vs => vs.Profile)
+                .Include(vs => vs.Center)
+                .Include(vs => vs.OrderDetail)
+                .Where(vs => vs.Profile != null && vs.Profile.Name.ToLower().Contains(profileName.ToLower()))
+                .ToList();
+        }
+
+        public List<VaccinationSchedule> GetSchedulesByCenterName(string centerName)
+        {
+            if (string.IsNullOrWhiteSpace(centerName))
+                return GetAllSchedules();
+
+            return _dbContext.VaccinationSchedules
+                .Include(vs => vs.Profile)
+                .Include(vs => vs.Center)
+                .Include(vs => vs.OrderDetail)
+                .Where(vs => vs.Center != null && vs.Center.Name.ToLower().Contains(centerName.ToLower()))
+                .ToList();
+        }
+        public OrderDetail GetOrderDetailByVaccinationScheduleId(Guid vaccinationScheduleId)
+        {
+            return _dbContext.VaccinationSchedules
+                .Include(vs => vs.OrderDetail) // Include OrderDetail first
+                    .ThenInclude(od => od.Order) // Then include OrderDetail's Order
+                .Include(vs => vs.OrderDetail) // Include OrderDetail again for chaining
+                    .ThenInclude(od => od.Vaccine) // Then include Vaccine
+                .Include(vs => vs.OrderDetail) // Include OrderDetail again for chaining
+                    .ThenInclude(od => od.VaccinePackage) // Then include VaccinePackage
+                .Where(vs => vs.VaccinationScheduleId == vaccinationScheduleId)
+                .Select(vs => vs.OrderDetail)
+                .SingleOrDefault();
+        }
     }
 }
