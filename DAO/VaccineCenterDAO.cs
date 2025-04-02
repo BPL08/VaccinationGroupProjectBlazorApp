@@ -64,9 +64,18 @@ namespace DAO
             }
         }
 
-        public List<VaccineCenter> GetAllCenters()
+        public (List<VaccineCenter> Centers, int TotalCount) GetAllCenters(int pageNumber, int pageSize)
         {
-            return _dbContext.VaccineCenters.ToList();
+            var query = _dbContext.VaccineCenters.AsQueryable();
+            int totalCount = query.Count();
+
+            var centers = query
+
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+
+            return (centers, totalCount);
         }
 
         public List<VaccineCenter> GetActiveCenters()

@@ -1,0 +1,208 @@
+﻿@page "/staff/vaccinemanagebatch"
+@inject ISessionStorageService SessionStorage
+@inject NavigationManager Navigation
+@inject IVaccineBatchRepository VaccineBatchRepository
+@inject IVaccineCenterRepository VaccineCenterRepository
+@using BO.Enums
+@rendermode InteractiveServer
+
+<div class="container-fluid">
+    <div class="row">
+        <StaffNavBar />
+
+        <main class="col-md-9 col-lg-10 p-4">
+            <h3 class="mb-3">Manage Vaccine Batches</h3>
+            @if (!isAuthorized && hasRendered)
+            {
+                <div class="text-danger">Unauthorized access. Redirecting to error...</div>
+            }
+            else if (batches == null)
+            {
+                <p class="lead">Loading vaccine batches...</p>
+            }
+            else if (!batches.Any())
+            {
+                <div class="text-center p-4 bg-light border rounded">
+                    <p class="lead">No vaccine batches found.</p>
+                    <button class="btn btn-primary" @onclick="ShowAddBatchModal">Add New Batch</button>
+                </div>
+            }
+            else
+            {
+                <div class="overflow-auto mt-3">
+                    <button class="btn btn-primary mb-3" @onclick="ShowAddBatchModal">Add New Batch</button>
+                    <table class="table table-striped table-hover table-bordered">
+                        <thead class="table-dark">
+                            <tr>
+                                <th scope="col">Batch ID</th>
+                                <th scope="col">Batch Number</th>
+                                <th scope="col">Center</th>
+                                <th scope="col">Status</th>
+                                <th scope="col">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var batch in batches)
+                            {
+                                <tr>
+                                    <td>@batch.VaccineBatchId</td>
+                                    <td>@batch.BatchNumber</td>
+                                    <td>@(batch.Center?.Name ?? "Loading...")</td>
+                                    <td>
+                                        <span class="badge @(batch.ActiveStatus == ActivationEnums.ACTIVATE ? "bg-success" : "bg-danger")">
+                                            @(batch.ActiveStatus == ActivationEnums.ACTIVATE ? "Active" : "Deactivated")
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-info btn-sm" @onclick="() => ViewBatchDetails(batch.VaccineBatchId)">View Details</button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+
+            <!-- Existing Modal Code Remains Unchanged -->
+            @if (showModal)
+            {
+                <div class="modal fade show d-block" tabindex="-1" @onclick="CloseModal">
+                    <div class="modal-dialog modal-dialog-centered" @onclick:stopPropagation>
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h4 class="modal-title">Add New Vaccine Batch</h4>
+                                <button type="button" class="btn-close" @onclick="CloseModal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <EditForm Model="@newBatch" OnValidSubmit="HandleAddBatch">
+                                    <DataAnnotationsValidator />
+                                    <ValidationSummary class="text-danger" />
+                                    <div class="mb-3">
+                                        <label class="form-label">Batch Number</label>
+                                        <InputText @bind-Value="newBatch.BatchNumber" class="form-control" />
+                                        <ValidationMessage For="@(() => newBatch.BatchNumber)" class="text-danger" />
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Center</label>
+                                        <InputSelect @bind-Value="selectedCenterId" class="form-control">
+                                            <option value="">Select Center</option>
+                                            @foreach (var center in centers)
+                                            {
+                                                <option value="@center.VacineCenterId">@center.Name</option>
+                                            }
+                                        </InputSelect>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Status</label>
+                                        <InputSelect @bind-Value="newBatch.ActiveStatus" class="form-control">
+                                            <option value="">Select Status</option>
+                                            <option value="@ActivationEnums.ACTIVATE">Activate</option>
+                                            <option value="@ActivationEnums.DEACTIVATE">Deactivate</option>
+                                        </InputSelect>
+                                        <ValidationMessage For="@(() => newBatch.ActiveStatus)" class="text-danger" />
+                                    </div>
+                                    <div class="d-flex gap-2">
+                                        <button type="submit" class="btn btn-primary">Save</button>
+                                        <button type="button" class="btn btn-secondary" @onclick="CloseModal">Cancel</button>
+                                    </div>
+                                </EditForm>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </main>
+    </div>
+</div>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+@code {
+    private bool hasRendered = false;
+    private bool isAuthorized = false;
+    private List<VaccineBatch> batches = new List<VaccineBatch>();
+    private List<VaccineCenter> centers;
+    private bool showModal = false;
+    private VaccineBatch newBatch = new VaccineBatch();
+    private string selectedCenterId;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && !hasRendered)
+        {
+            var accountId = await SessionStorage.GetItemAsync<string>("AccountId");
+
+            if (!string.IsNullOrEmpty(accountId))
+            {
+                var account = await GetAccountDetails(accountId);
+                isAuthorized = account?.AccountRole == "Staff";
+            }
+            else
+            {
+                isAuthorized = false;
+            }
+
+            hasRendered = true;
+
+            if (!isAuthorized)
+            {
+                Navigation.NavigateTo("/Error");
+            }
+            else
+            {
+                await LoadData();
+            }
+        }
+    }
+
+    private async Task LoadData()
+    {
+        try
+        {
+            batches = VaccineBatchRepository.GetAllVaccineBatches() ?? new List<VaccineBatch>();
+            var (fetchedCenters, _) = VaccineCenterRepository.GetAllVaccineCenters(1, int.MaxValue);
+            centers = fetchedCenters ?? new List<VaccineCenter>();
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            batches = new List<VaccineBatch>();
+            centers = new List<VaccineCenter>();
+            StateHasChanged();
+        }
+    }
+
+    private void ShowAddBatchModal()
+    {
+        newBatch = new VaccineBatch();
+        selectedCenterId = "";
+        showModal = true;
+    }
+
+    private void CloseModal()
+    {
+        showModal = false;
+    }
+
+    private async Task HandleAddBatch()
+    {
+        if (!string.IsNullOrEmpty(selectedCenterId))
+        {
+            newBatch.FKCenterId = int.Parse(selectedCenterId);
+        }
+        VaccineBatchRepository.AddVaccineBatch(newBatch);
+        showModal = false;
+        await LoadData();
+    }
+
+    private void ViewBatchDetails(int batchId)
+    {
+        Navigation.NavigateTo($"/staff/managevaccines/{batchId}");
+    }
+
+    private async Task<Account> GetAccountDetails(string accountId)
+    {
+        return await Task.FromResult(new Account { AccountRole = "Staff" });
+    }
+}

@@ -19,7 +19,9 @@ builder.Services.AddRazorComponents()
 
 builder.Services.AddScoped<IAccountRepository, AccountRepository>();
 builder.Services.AddScoped<IVaccineCenterRepository, VaccineCenterRepository>();
-
+builder.Services.AddScoped<IVaccineBatchRepository, VaccineBatchRepository>();
+builder.Services.AddScoped<IVaccineRepository, VaccineRepository>();
+builder.Services.AddScoped<IVaccineCategoryRepository, VaccineCategoryRepository>();
 builder.Services.AddBlazoredSessionStorage();
 var app = builder.Build();
 
