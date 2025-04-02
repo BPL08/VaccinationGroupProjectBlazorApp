@@ -196,11 +196,10 @@
             }
 
             <!-- Update Vaccine Modal -->
-            <!-- Update Vaccine Modal -->
             @if (showUpdateModal)
             {
                 <div class="modal fade show d-block" tabindex="-1" @onclick="CloseModal">
-                    <div class="modal-dialog modal-dialog-centered" @onclick:stopPropagation>
+                    <div class="modal-dialog modal-dialog-centered modal-lg" @onclick:stopPropagation>
                         <div class="modal-content">
                             <div class="modal-header">
                                 <h4 class="modal-title">Update Vaccine #@selectedVaccine.VaccineId</h4>
@@ -214,31 +213,78 @@
                                 <EditForm Model="@selectedVaccine" OnValidSubmit="HandleUpdateVaccine" enctype="multipart/form-data">
                                     <DataAnnotationsValidator />
                                     <ValidationSummary class="text-danger" />
-                                    <div class="mb-3">
-                                        <label class="form-label">Name</label>
-                                        <InputText @bind-Value="selectedVaccine.Name" class="form-control" />
-                                        <ValidationMessage For="@(() => selectedVaccine.Name)" class="text-danger" />
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label">Status</label>
-                                        <InputSelect @bind-Value="selectedVaccine.Status" class="form-control">
-                                            <option value="">Select Status</option>
-                                            <option value="@ActivationEnums.ACTIVATE">Activate</option>
-                                            <option value="@ActivationEnums.DEACTIVATE">Deactivate</option>
-                                        </InputSelect>
-                                        <ValidationMessage For="@(() => selectedVaccine.Status)" class="text-danger" />
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label">Image</label>
-                                        <InputFile OnChange="@HandleUpdateFileSelected" class="form-control" accept="image/*" />
-                                        @if (!string.IsNullOrEmpty(imagePreviewUrl))
-                                        {
-                                            <img src="@imagePreviewUrl" alt="Preview" class="img-thumbnail mt-2" style="max-width: 200px;" />
-                                        }
-                                        else if (!string.IsNullOrEmpty(selectedVaccine.Image))
-                                        {
-                                            <img src="@GetImageUrl(selectedVaccine.Image)" alt="Current Image" class="img-thumbnail mt-2" style="max-width: 200px;" />
-                                        }
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label class="form-label">Name</label>
+                                                <InputText @bind-Value="selectedVaccine.Name" class="form-control" />
+                                                <ValidationMessage For="@(() => selectedVaccine.Name)" class="text-danger" />
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label">Category</label>
+                                                <InputSelect @bind-Value="selectedVaccine.FKCategoryId" class="form-control">
+                                                    <option value="">Select Category</option>
+                                                    @foreach (var category in categories)
+                                                    {
+                                                        <option value="@category.VaccineCategoryId">@category.CategoryName</option>
+                                                    }
+                                                </InputSelect>
+                                                <ValidationMessage For="@(() => selectedVaccine.FKCategoryId)" class="text-danger" />
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label">Status</label>
+                                                <InputSelect @bind-Value="selectedVaccine.Status" class="form-control">
+                                                    <option value="">Select Status</option>
+                                                    <option value="@ActivationEnums.ACTIVATE">Activate</option>
+                                                    <option value="@ActivationEnums.DEACTIVATE">Deactivate</option>
+                                                </InputSelect>
+                                                <ValidationMessage For="@(() => selectedVaccine.Status)" class="text-danger" />
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label">Unit of Volume</label>
+                                                <InputNumber @bind-Value="selectedVaccine.UnitOfVolume" class="form-control" />
+                                                <ValidationMessage For="@(() => selectedVaccine.UnitOfVolume)" class="text-danger" />
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label">Price</label>
+                                                <InputNumber @bind-Value="selectedVaccine.Price" class="form-control" />
+                                                <ValidationMessage For="@(() => selectedVaccine.Price)" class="text-danger" />
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label class="form-label">Image</label>
+                                                <InputFile OnChange="@HandleUpdateFileSelected" class="form-control" accept="image/*" />
+                                                @if (!string.IsNullOrEmpty(imagePreviewUrl))
+                                                {
+                                                    <img src="@imagePreviewUrl" alt="Preview" class="img-thumbnail mt-2" style="max-width: 200px;" />
+                                                }
+                                                else if (!string.IsNullOrEmpty(selectedVaccine.Image))
+                                                {
+                                                    <img src="@GetImageUrl(selectedVaccine.Image)" alt="Current Image" class="img-thumbnail mt-2" style="max-width: 200px;" />
+                                                }
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label">Min Age</label>
+                                                <InputNumber @bind-Value="selectedVaccine.MinAge" class="form-control" />
+                                                <ValidationMessage For="@(() => selectedVaccine.MinAge)" class="text-danger" />
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label">Max Age</label>
+                                                <InputNumber @bind-Value="selectedVaccine.MaxAge" class="form-control" />
+                                                <ValidationMessage For="@(() => selectedVaccine.MaxAge)" class="text-danger" />
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label">Production Date</label>
+                                                <InputDate @bind-Value="selectedVaccine.ProductionDate" class="form-control" />
+                                                <ValidationMessage For="@(() => selectedVaccine.ProductionDate)" class="text-danger" />
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label">Expiration Date</label>
+                                                <InputDate @bind-Value="selectedVaccine.ExpirationDate" class="form-control" />
+                                                <ValidationMessage For="@(() => selectedVaccine.ExpirationDate)" class="text-danger" />
+                                            </div>
+                                        </div>
                                     </div>
                                     <div class="mb-3">
                                         <label class="form-label">Ingredients Description</label>
@@ -255,13 +301,13 @@
                     </div>
                 </div>
             }
-            }
         </main>
     </div>
 </div>
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
 @code {
     [Parameter]
     public int BatchId { get; set; }
@@ -337,13 +383,13 @@
     {
         selectedVaccine = new Vaccine
             {
-                VaccineId = vaccine.VaccineId,
+                VaccineId = vaccine.VaccineId, // Keep ID unchanged
                 Name = vaccine.Name,
                 Image = vaccine.Image,
                 IngredientsDescription = vaccine.IngredientsDescription,
                 FKCategoryId = vaccine.FKCategoryId,
                 FKBatchId = vaccine.FKBatchId,
-                Status = vaccine.Status, // Ensure Status is copied
+                Status = vaccine.Status,
                 UnitOfVolume = vaccine.UnitOfVolume,
                 MinAge = vaccine.MinAge,
                 MaxAge = vaccine.MaxAge,
@@ -374,6 +420,7 @@
             {
                 var fileName = await SaveImageFile(selectedFile);
                 newVaccine.Image = fileName;
+                Console.WriteLine($"Added image: {fileName}");
             }
 
             VaccineRepository.AddVaccine(newVaccine);
@@ -396,13 +443,15 @@
                 if (!string.IsNullOrEmpty(selectedVaccine.Image))
                 {
                     DeleteImageFile(selectedVaccine.Image);
+                    Console.WriteLine($"Deleted old image: {selectedVaccine.Image}");
                 }
                 var fileName = await SaveImageFile(selectedFile);
                 selectedVaccine.Image = fileName;
+                Console.WriteLine($"Updated to new image: {fileName}");
             }
 
             // Log for debugging
-            Console.WriteLine($"Updating Vaccine ID: {selectedVaccine.VaccineId}, Name: {selectedVaccine.Name}, Status: {selectedVaccine.Status}, Image: {selectedVaccine.Image}");
+            Console.WriteLine($"Updating Vaccine ID: {selectedVaccine.VaccineId}, Name: {selectedVaccine.Name}, Status: {selectedVaccine.Status}, Image: {selectedVaccine.Image}, FKCategoryId: {selectedVaccine.FKCategoryId}, UnitOfVolume: {selectedVaccine.UnitOfVolume}, MinAge: {selectedVaccine.MinAge}, MaxAge: {selectedVaccine.MaxAge}, Price: {selectedVaccine.Price}, ProductionDate: {selectedVaccine.ProductionDate}, ExpirationDate: {selectedVaccine.ExpirationDate}");
 
             VaccineRepository.UpdateVaccine(selectedVaccine.VaccineId, selectedVaccine);
             showUpdateModal = false;
@@ -411,6 +460,7 @@
         catch (Exception ex)
         {
             errorMessage = $"Error updating vaccine: {ex.Message}";
+            Console.WriteLine($"Update error: {ex.Message}");
             StateHasChanged();
         }
     }
@@ -445,6 +495,7 @@
             await selectedFile.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024).CopyToAsync(memoryStream);
             var buffer = memoryStream.ToArray();
             imagePreviewUrl = $"data:{selectedFile.ContentType};base64,{Convert.ToBase64String(buffer)}";
+            Console.WriteLine($"File selected: {selectedFile.Name}, Preview URL generated.");
             StateHasChanged();
         }
     }
@@ -459,7 +510,7 @@
         if (string.IsNullOrEmpty(imageFileName))
             return null;
 
-        return $"/{ImageFolder}/{imageFileName}";
+        return $"/{ImageFolder}/{imageFileName}"; // Cache-busting for image updates
     }
 
     private void GoBack()
