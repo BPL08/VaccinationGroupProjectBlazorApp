@@ -7,6 +7,7 @@
 @inject IVaccinePackageDetailRepository VaccinePackageDetailRepository
 @inject IOrderRepository OrderRepository
 @inject IOrderDetailRepository OrderDetailRepository
+@inject IVaccinationScheduleRepository VaccinationScheduleRepository
 @inject IChildrenProfileRepository ChildrenProfileRepository
 @using BO.Entity
 @using BO.Enums
@@ -116,6 +117,7 @@
                             <tr>
                                 <th>Name</th>
                                 <th>Price (VND)</th>
+                                <th>Appointment Date</th>
                                 <th>Action</th>
                             </tr>
                         </thead>
@@ -126,6 +128,9 @@
                                     <td>@item.Name</td>
                                     <td>@item.Price</td>
                                     <td>
+                                        <InputDate @bind-Value="item.AppointmentDate" class="form-control" min="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                                    </td>
+                                    <td>
                                         <button class="btn btn-danger btn-sm" @onclick="() => RemoveFromCart(item)">Remove</button>
                                     </td>
                                 </tr>
@@ -135,7 +140,7 @@
                     <p><strong>Total: @cartItems.Sum(i => i.Price) VND</strong></p>
                 </div>
                 <div class="d-flex justify-content-end">
-                    <button class="btn btn-success" @onclick="ConfirmOrder">Confirm Order</button>
+                    <button class="btn btn-success" @onclick="CreateOrder">Create Order</button>
                 </div>
             }
         </section>
@@ -227,7 +232,8 @@
                 {
                     VaccineId = vaccine.VaccineId,
                     Name = vaccine.Name,
-                    Price = vaccine.Price
+                    Price = vaccine.Price,
+                    AppointmentDate = DateTime.Now // Giá trị mặc định, người dùng sẽ chỉnh sau
                 });
         }
         else if (package != null)
@@ -238,7 +244,8 @@
                 {
                     VaccinePackageId = package.VaccinePackageId,
                     Name = package.PackageName,
-                    Price = totalPrice
+                    Price = totalPrice,
+                    AppointmentDate = DateTime.Now // Giá trị mặc định, người dùng sẽ chỉnh sau
                 });
         }
         StateHasChanged();
@@ -250,13 +257,13 @@
         StateHasChanged();
     }
 
-    private async Task ConfirmOrder()
+    private async Task CreateOrder()
     {
         try
         {
             if (!cartItems.Any())
             {
-                Message = "Cart is empty. Please add items before confirming.";
+                Message = "Cart is empty. Please add items before creating an order.";
                 return;
             }
 
@@ -269,39 +276,84 @@
 
             var accountIdString = await SessionStorage.GetItemAsync<string>("AccountId");
             Guid.TryParse(accountIdString, out Guid accountId);
+            var account = await GetAccountDetails(accountId);
 
             // Tạo Order
             var order = new Order
                 {
                     OrderId = Guid.NewGuid(),
-                    FKProfileId = childrenProfiles.First().ProfileId, // Lấy profile đầu tiên, bạn có thể thêm logic chọn profile
+                    FKProfileId = childrenProfiles.First().ProfileId, // Lấy profile đầu tiên, có thể thêm logic chọn
                     TotalAmountPrice = cartItems.Sum(i => i.Price),
-                    TotalPaidPrice = 0, // Chưa thanh toán
+                    TotalPaidPrice = 0,
                     PurchaseDate = DateTime.Now,
                     Status = 0 // Pending
                 };
             OrderRepository.AddOrder(order);
 
-            // Tạo OrderDetails
+            // Tạo OrderDetails và VaccinationSchedules
             foreach (var item in cartItems)
             {
-                var orderDetail = new OrderDetail
+                if (item.VaccineId.HasValue) // Vaccine lẻ
+                {
+                    var orderDetail = new OrderDetail
+                        {
+                            OrderDetailId = Guid.NewGuid(),
+                            FKOrderId = order.OrderId,
+                            FKVaccineId = item.VaccineId,
+                            FKVaccinePackageId = null,
+                            TotalPrice = item.Price
+                        };
+                    OrderDetailRepository.AddOrderDetail(orderDetail);
+
+                    var schedule = new VaccinationSchedule
+                        {
+                            VaccinationScheduleId = Guid.NewGuid(),
+                            FKProfileId = order.FKProfileId,
+                            FKCenterId = vaccines.First(v => v.VaccineId == item.VaccineId.Value).Batch.FKCenterId, // Lấy từ batch của vaccine
+                            FKOrderDetailsId = orderDetail.OrderDetailId,
+                            DoseNumber = 1, // Mặc định liều 1, có thể thêm logic
+                            AppointmentDate = item.AppointmentDate,
+                            ActualDate = null,
+                            AdministeredBy = "Pending", // Chưa tiêm, có thể để trống
+                            Status = 0 // Pending
+                        };
+                    VaccinationScheduleRepository.AddVaccinationSchedule(schedule);
+                }
+                else if (item.VaccinePackageId.HasValue) // Vaccine Package
+                {
+                    var packageDetails = vaccinePackageDetails.Where(d => d.FKVaccinePackageId == item.VaccinePackageId.Value).ToList();
+                    foreach (var detail in packageDetails)
                     {
-                        OrderDetailId = Guid.NewGuid(),
-                        FKOrderId = order.OrderId,
-                        FKVaccineId = item.VaccineId,
-                        FKVaccinePackageId = item.VaccinePackageId,
-                        TotalPrice = item.Price
-                    };
-                OrderDetailRepository.AddOrderDetail(orderDetail);
+                        var orderDetail = new OrderDetail
+                            {
+                                OrderDetailId = Guid.NewGuid(),
+                                FKOrderId = order.OrderId,
+                                FKVaccineId = detail.FKVaccineId, // Gắn VaccineId từ package
+                                FKVaccinePackageId = item.VaccinePackageId, // Gắn PackageId
+                                TotalPrice = detail.PackagePrice // Giá từng vaccine trong gói
+                            };
+                        OrderDetailRepository.AddOrderDetail(orderDetail);
+
+                        var schedule = new VaccinationSchedule
+                            {
+                                VaccinationScheduleId = Guid.NewGuid(),
+                                FKProfileId = order.FKProfileId,
+                                FKCenterId = vaccines.First(v => v.VaccineId == detail.FKVaccineId).Batch.FKCenterId, // Lấy từ batch của vaccine
+                                FKOrderDetailsId = orderDetail.OrderDetailId,
+                                DoseNumber = 1, // Mặc định liều 1
+                                AppointmentDate = item.AppointmentDate,
+                                ActualDate = null,
+                                AdministeredBy = "Pending",
+                                Status = 1 // Pending
+                            };
+                        VaccinationScheduleRepository.AddVaccinationSchedule(schedule);
+                    }
+                }
             }
 
             cartItems.Clear();
-            Message = "Order successfully created!";
+            Message = "Order and schedules successfully created!";
             StateHasChanged();
-
-            // Chuyển hướng nếu cần
-            // Navigation.NavigateTo("/customer/order-confirmation");
         }
         catch (Exception ex)
         {
@@ -316,5 +368,6 @@
         public int? VaccinePackageId { get; set; }
         public string Name { get; set; }
         public int Price { get; set; }
+        public DateTime AppointmentDate { get; set; }
     }
 }

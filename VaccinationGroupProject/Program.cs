@@ -21,6 +21,7 @@ builder.Services.AddScoped<IVaccineHistoryRepository, VaccineHistoryRepository>(
 builder.Services.AddScoped<IVaccinePackageRepository, VaccinePackageRepository>();
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddScoped<IOrderDetailRepository, OrderDetailRepository>();
+builder.Services.AddScoped<IVaccinationScheduleRepository, VaccinationScheduleRepository>();
 builder.Services.AddScoped<IVaccineRepository, VaccineRepository>();
 builder.Services.AddScoped<IVaccineCategoryRepository, VaccineCategoryRepository>();
 builder.Services.AddScoped<IVaccinePackageDetailRepository, VaccinePackageDetailRepository>();
