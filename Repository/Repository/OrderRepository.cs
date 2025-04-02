@@ -8,6 +8,7 @@ namespace Repository.Repository
     {
         public void AddOrder(Order order) => OrderDAO.Instance.AddOrder(order);
 
+        public List<Order> GetOrdersByAccountId(Guid accountId) => OrderDAO.Instance.GetOrdersByAccountId(accountId);
         public Order GetOrderById(Guid orderId) => OrderDAO.Instance.GetOrderById(orderId);
 
         public List<Order> GetAllOrders() => OrderDAO.Instance.GetAllOrders();
