@@ -4,38 +4,49 @@
 @inject ISessionStorageService SessionStorage
 @rendermode InteractiveServer
 
-<div class="login-container">
-    <h3>Login</h3>
+<div class="auth-wrapper d-flex align-items-center justify-content-center min-vh-100">
+    <!-- Title outside the card -->
+    <div class="welcome-title text-center mb-4">
+        <h1 class="fw-bold text-white">Welcome Back</h1>
+    </div>
 
-    <EditForm Model="@InputModel" OnValidSubmit="HandleLogin">
-        <DataAnnotationsValidator />
-        <ValidationSummary />
-
-        <div class="form-group">
-            <label class="control-label">Email</label>
-            <InputText @bind-Value="InputModel.Email" class="form-control" />
-            <ValidationMessage For="@(() => InputModel.Email)" class="text-danger" />
+    <!-- Card containing the login form -->
+    <div class="auth-container card shadow-lg p-4">
+        <div class="text-center mb-4">
+            <p class="text-muted">Login to manage your vaccination schedule</p>
         </div>
 
-        <div class="form-group">
-            <label class="control-label">Password</label>
-            <InputText @bind-Value="InputModel.Password" class="form-control" type="password" />
-            <ValidationMessage For="@(() => InputModel.Password)" class="text-danger" />
-        </div>
+        <EditForm Model="@InputModel" OnValidSubmit="HandleLogin">
+            <DataAnnotationsValidator />
 
-        <div class="form-group">
-            <button type="submit" class="btn btn-primary">Login</button>
-        </div>
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Email</label>
+                <InputText @bind-Value="InputModel.Email" class="form-control form-control-lg" placeholder="Enter your email" />
+                <ValidationMessage For="@(() => InputModel.Email)" class="text-danger mt-1" />
+            </div>
 
-        @if (!string.IsNullOrEmpty(ErrorMessage))
-        {
-            <div class="text-danger">@ErrorMessage</div>
-        }
-    </EditForm>
-    <div class="form-group">
-        <button class="btn btn-secondary" @onclick="NavigateToSignUp">Sign Up</button>
+            <div class="mb-4">
+                <label class="form-label fw-semibold">Password</label>
+                <InputText @bind-Value="InputModel.Password" class="form-control form-control-lg" type="password" placeholder="Enter your password" />
+                <ValidationMessage For="@(() => InputModel.Password)" class="text-danger mt-1" />
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-lg w-100 mb-3">Login</button>
+
+            @if (!string.IsNullOrEmpty(ErrorMessage))
+            {
+                <div class="alert alert-danger text-center py-2">@ErrorMessage</div>
+            }
+        </EditForm>
+    </div>
+
+    <!-- Sign Up link outside the card -->
+    <div class="text-center mt-4">
+        <span class="text-white">Don't have an account? </span>
+        <a href="/signup" class="btn btn-link text-white p-0 ms-1">Sign Up</a>
     </div>
 </div>
+<link rel="stylesheet" href="Login.razor.css" />
 
 @code {
     private LoginInputModel InputModel { get; set; } = new LoginInputModel();
@@ -44,13 +55,11 @@
     private async Task HandleLogin()
     {
         var account = AccountRepository.Login(InputModel.Email, InputModel.Password);
-        Console.WriteLine(InputModel.Email);
-        Console.WriteLine(InputModel.Password);
         if (account != null)
         {
             await SessionStorage.SetItemAsync("AccountId", account.AccountId.ToString());
             await SessionStorage.SetItemAsync("AccountRole", account.AccountRole.ToString());
-           
+
             if (account.AccountRole == RoleEnums.Admin)
             {
                 Navigation.NavigateTo("/admin");
@@ -69,13 +78,11 @@
             ErrorMessage = "Invalid username or password";
         }
     }
-    private void NavigateToSignUp()
-    {
-        Navigation.NavigateTo("/signup");
-    }
+
     public class LoginInputModel
     {
         [Required(ErrorMessage = "Email is required.")]
+        [EmailAddress(ErrorMessage = "Invalid email address.")]
         public string Email { get; set; }
 
         [Required(ErrorMessage = "Password is required.")]
