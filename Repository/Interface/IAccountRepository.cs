@@ -16,6 +16,7 @@ namespace Repository.Interface
         Account Login(string email, string password);
 
         void SignUp(Account account);
+        void UpdateAccountDetails(Guid accountId, string username, string email, string role, string status);
 
 
 }

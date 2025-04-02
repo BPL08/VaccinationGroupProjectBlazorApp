@@ -1,0 +1,128 @@
+﻿@page "/admin"
+@using VaccinationGroupProject.Components.Admin
+@inject NavigationManager NavigationManager
+@inject ISessionStorageService SessionStorage
+@rendermode InteractiveServer
+@layout AdminLayout
+
+@if (isAuthenticated)
+{
+    <div class="container">
+        <h3 class="mb-4">Admin Dashboard</h3>
+
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="card h-100 shadow-sm" @onclick="@(() => NavigationManager.NavigateTo("/admin/account"))">
+                    <div class="card-body text-center">
+                        <span class="fs-1 mb-3 text-primary">👥</span>
+                        <h5 class="card-title">Account Management</h5>
+                        <p class="card-text">Manage user accounts, roles, and permissions</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card h-100 shadow-sm" @onclick="@(() => NavigationManager.NavigateTo("/admin/centers"))">
+                    <div class="card-body text-center">
+                        <span class="fs-1 mb-3 text-success">🏢</span>
+                        <h5 class="card-title">Vaccination Centers</h5>
+                        <p class="card-text">Manage vaccination centers and locations</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card h-100 shadow-sm" @onclick="@(() => NavigationManager.NavigateTo("/admin/vaccines"))">
+                    <div class="card-body text-center">
+                        <span class="fs-1 mb-3 text-danger">💉</span>
+                        <h5 class="card-title">Vaccines</h5>
+                        <p class="card-text">Manage vaccine inventory and information</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card h-100 shadow-sm" @onclick="@(() => NavigationManager.NavigateTo("/admin/packages"))">
+                    <div class="card-body text-center">
+                        <span class="fs-1 mb-3 text-warning">📦</span>
+                        <h5 class="card-title">Vaccine Packages</h5>
+                        <p class="card-text">Manage vaccine packages and bundles</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card h-100 shadow-sm" @onclick="@(() => NavigationManager.NavigateTo("/admin/orders"))">
+                    <div class="card-body text-center">
+                        <span class="fs-1 mb-3 text-info">🛒</span>
+                        <h5 class="card-title">Orders</h5>
+                        <p class="card-text">View and manage customer orders</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card h-100 shadow-sm" @onclick="@(() => NavigationManager.NavigateTo("/admin/reports"))">
+                    <div class="card-body text-center">
+                        <span class="fs-1 mb-3 text-secondary">📊</span>
+                        <h5 class="card-title">Reports</h5>
+                        <p class="card-text">View vaccination statistics and reports</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+else if (isLoading)
+{
+    <div class="d-flex justify-content-center mt-5">
+        <div class="spinner-border" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+}
+else
+{
+    <div class="alert alert-warning">Please log in as an administrator to access this page.</div>
+}
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+@code {
+    private bool isAuthenticated = false;
+    private bool isLoading = true;
+    private bool isFirstRender = true;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try
+            {
+                var accountRole = await SessionStorage.GetItemAsStringAsync("AccountRole");
+                
+                
+                if (!string.IsNullOrEmpty(accountRole) && 
+                    accountRole.Trim('"').Equals("Admin", StringComparison.OrdinalIgnoreCase))
+                {
+                    isAuthenticated = true;
+                }
+                else
+                {
+                    Console.WriteLine("Role doesn't match Admin, redirecting to login");
+                    NavigationManager.NavigateTo("/login");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error: {ex.Message}");
+                NavigationManager.NavigateTo("/login");
+            }
+            finally
+            {
+                isLoading = false;
+                StateHasChanged();
+            }
+        }
+    }
+}

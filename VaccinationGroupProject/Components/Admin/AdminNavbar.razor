@@ -1,0 +1,65 @@
+@inject NavigationManager NavigationManager
+@inject ISessionStorageService SessionStorage
+
+<nav class="top-row ps-3 navbar navbar-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="/admin">Admin Dashboard</a>
+        <input type="checkbox" title="Navigation menu" class="navbar-toggler" />
+    </div>
+</nav>
+
+<div class="nav-scrollable">
+    <nav class="flex-column">
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="/admin" Match="NavLinkMatch.All">
+                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Dashboard
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="/admin/account">
+                <span class="bi bi-people-fill" aria-hidden="true"></span> Accounts
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="/admin/centers">
+                <span class="bi bi-hospital" aria-hidden="true"></span> Vaccination Centers
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="/admin/vaccines">
+                <span class="bi bi-syringe" aria-hidden="true"></span> Vaccines
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="/admin/packages">
+                <span class="bi bi-box-seam" aria-hidden="true"></span> Vaccine Packages
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="/admin/orders">
+                <span class="bi bi-receipt" aria-hidden="true"></span> Orders
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3 mt-auto">
+            <button class="btn btn-outline-light w-100" @onclick="Logout">
+                <span class="bi bi-box-arrow-right" aria-hidden="true"></span> Logout
+            </button>
+        </div>
+    </nav>
+</div>
+
+@code {
+    private async Task Logout()
+    {
+        Console.WriteLine("Logout method called");
+        await SessionStorage.RemoveItemAsync("AccountId");
+        await SessionStorage.RemoveItemAsync("AccountRole");
+        NavigationManager.NavigateTo("/login", true);
+    }
+}

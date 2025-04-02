@@ -1,0 +1,442 @@
+﻿@page "/admin/account"
+@using VaccinationGroupProject.Components.Admin
+@inject ISessionStorageService SessionStorage
+@inject NavigationManager Navigation
+@inject IAccountRepository AccountRepository
+@inject IVaccineCenterRepository VaccineCenterRepository
+@rendermode InteractiveServer
+@layout AdminLayout
+@inject IJSRuntime JSRuntime
+
+
+<div class="container-fluid">
+    <div class="row">
+        <main class="col-md-9 col-lg-10 p-4">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h3>Manage Accounts</h3>
+                <button class="btn btn-primary" @onclick="ShowAddAccountModal">Create New Account</button>
+            </div>
+
+            <div class="mb-3">
+                <div class="input-group">
+                    <input type="text" class="form-control" placeholder="Search by name or email" @bind="searchTerm" @bind:event="oninput" />
+                    <select class="form-select" style="max-width: 200px;" @bind="roleFilter">
+                        <option value="">All Roles</option>
+                        <option value="Customer">Customer</option>
+                        <option value="Admin">Admin</option>
+                        <option value="Staff">Staff</option>
+                    </select>
+                </div>
+            </div>
+
+            @if (!isAuthorized && hasRendered)
+            {
+                <div class="text-danger">Unauthorized access. Redirecting to login...</div>
+            }
+            else if (accounts == null)
+            {
+                <div class="text-center">
+                    <div class="spinner-border" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            }
+            else if (!filteredAccounts.Any())
+            {
+                <div class="text-center p-4 bg-light border rounded">
+                    <p class="lead">No accounts found.</p>
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover table-bordered">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>ID</th>
+                                <th>Username</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th>Center</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var account in filteredAccounts)
+                            {
+                                <tr>
+                                    <td>@account.AccountId.ToString("N").Substring(0, 8)</td>
+                                    <td>@account.UserName</td>
+                                    <td>@account.Email</td>
+                                    <td>@account.AccountRole</td>
+                                    <td>@(account.FKCenterId.HasValue ? account.Center?.Name ?? "Loading..." : "N/A")</td>
+                                    <td>
+                                        <span class="badge @(account.Status?.ToLower() == "activate" ? "bg-success" : "bg-danger")">
+                                            @account.Status
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-sm btn-primary me-1" @onclick="() => EditAccount(account.AccountId)">Edit</button>
+                                        <button class="btn btn-sm btn-danger" @onclick="() => DeleteAccount(account.AccountId)">Delete</button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+
+            @if (showModal)
+            {
+                <div class="modal fade show d-block" tabindex="-1" @onclick="CloseModal">
+                    <div class="modal-dialog modal-dialog-centered" @onclick:stopPropagation>
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h4 class="modal-title">Add New Account</h4>
+                                <button type="button" class="btn-close" @onclick="CloseModal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <EditForm Model="@newAccount" OnValidSubmit="HandleAddAccount">
+                                    <DataAnnotationsValidator />
+                                    <ValidationSummary class="text-danger" />
+                                    <div class="mb-3">
+                                        <label class="form-label">Username</label>
+                                        <InputText @bind-Value="newAccount.UserName" class="form-control" />
+                                        <ValidationMessage For="@(() => newAccount.UserName)" class="text-danger" />
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Email</label>
+                                        <InputText @bind-Value="newAccount.Email" class="form-control" />
+                                        <ValidationMessage For="@(() => newAccount.Email)" class="text-danger" />
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Password</label>
+                                        <InputText @bind-Value="newAccount.Password" class="form-control" type="password" />
+                                        <ValidationMessage For="@(() => newAccount.Password)" class="text-danger" />
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Phone Number</label>
+                                        <InputText @bind-Value="phoneNumberString" class="form-control" type="text" pattern="\d*" maxlength="10" />
+                                        <ValidationMessage For="@(() => newAccount.PhoneNumber)" class="text-danger" />
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Role</label>
+                                        <InputSelect @bind-Value="newAccount.AccountRole" class="form-control" @onchange="OnRoleChanged">
+                                            <option value="">Select Role</option>
+                                            <option value="@RoleEnums.Admin">Admin</option>
+                                            <option value="@RoleEnums.Staff">Staff</option>
+                                            <option value="@RoleEnums.Customer">Customer</option>
+                                        </InputSelect>
+                                        <ValidationMessage For="@(() => newAccount.AccountRole)" class="text-danger" />
+                                    </div>
+                                    @if (newAccount.AccountRole == RoleEnums.Staff && centers != null)
+                                    {
+                                        <div class="mb-3">
+                                            <label class="form-label">Center</label>
+                                            <InputSelect @bind-Value="selectedCenterId" class="form-control">
+                                                <option value="">Select Center</option>
+                                                @foreach (var center in centers)
+                                                {
+                                                    <option value="@center.VacineCenterId">@center.Name</option>
+                                                }
+                                            </InputSelect>
+                                        </div>
+                                    }
+                                    <div class="mb-3">
+                                        <label class="form-label">Status</label>
+                                        <InputSelect @bind-Value="newAccount.Status" class="form-control">
+                                            <option value="">Select Status</option>
+                                            <option value="ACTIVATE">Active</option>
+                                            <option value="DEACTIVATE">Inactive</option>
+                                        </InputSelect>
+                                        <ValidationMessage For="@(() => newAccount.Status)" class="text-danger" />
+                                    </div>
+                                    <div class="d-flex gap-2">
+                                        <button type="submit" class="btn btn-primary">Save</button>
+                                        <button type="button" class="btn btn-secondary" @onclick="CloseModal">Cancel</button>
+                                    </div>
+                                </EditForm>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+            @if (showEditModal)
+            {
+                <div class="modal fade show d-block" tabindex="-1" @onclick="CloseEditModal">
+                    <div class="modal-dialog modal-dialog-centered" @onclick:stopPropagation>
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h4 class="modal-title">Edit Account</h4>
+                                <button type="button" class="btn-close" @onclick="CloseEditModal"></button>
+                            </div>
+                            <div class="modal-body">
+                                @if (editAccount != null)
+                                {
+                                    <EditForm Model="editAccount" OnValidSubmit="HandleEditSubmit">
+                                        <DataAnnotationsValidator />
+                                        <ValidationSummary class="text-danger" />
+                                        
+                                        <div class="mb-3">
+                                            <label class="form-label">Username</label>
+                                            <InputText @bind-Value="editAccount.UserName" class="form-control" />
+                                            <ValidationMessage For="@(() => editAccount.UserName)" class="text-danger" />
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label class="form-label">Email</label>
+                                            <InputText @bind-Value="editAccount.Email" class="form-control" />
+                                            <ValidationMessage For="@(() => editAccount.Email)" class="text-danger" />
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label class="form-label">Role</label>
+                                            <InputSelect @bind-Value="editAccount.AccountRole" class="form-control" @onchange="OnEditRoleChanged">
+                                                <option value="@RoleEnums.Admin">Admin</option>
+                                                <option value="@RoleEnums.Staff">Staff</option>
+                                                <option value="@RoleEnums.Customer">Customer</option>
+                                            </InputSelect>
+                                        </div>
+
+                                        @if (editAccount.AccountRole == RoleEnums.Staff && centers != null)
+                                        {
+                                            <div class="mb-3">
+                                                <label class="form-label">Center</label>
+                                                <InputSelect @bind-Value="selectedEditCenterId" class="form-control">
+                                                    <option value="">Select Center</option>
+                                                    @foreach (var center in centers)
+                                                    {
+                                                        <option value="@center.VacineCenterId">@center.Name</option>
+                                                    }
+                                                </InputSelect>
+                                            </div>
+                                        }
+
+                                        <div class="mb-3">
+                                            <label class="form-label">Status</label>
+                                            <InputSelect @bind-Value="editAccount.Status" class="form-control">
+                                                <option value="ACTIVATE">Active</option>
+                                                <option value="DEACTIVATE">Inactive</option>
+                                            </InputSelect>
+                                        </div>
+
+                                        <div class="d-flex gap-2">
+                                            <button type="submit" class="btn btn-primary">Save Changes</button>
+                                            <button type="button" class="btn btn-secondary" @onclick="CloseEditModal">Cancel</button>
+                                        </div>
+                                    </EditForm>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </main>
+    </div>
+</div>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+@code {
+    private bool hasRendered = false;
+    private bool isAuthorized = false;
+    private List<Account> accounts = new List<Account>();
+    private List<VaccineCenter> centers;
+    private bool showModal = false;
+    private Account newAccount = new Account();
+    private string selectedCenterId;
+    private string searchTerm = "";
+    private string roleFilter = "";
+    private string phoneNumberString
+    {
+        get => newAccount.PhoneNumber.ToString();
+        set => newAccount.PhoneNumber = int.TryParse(value, out int result) ? result : 0;
+    }
+
+    private List<Account> filteredAccounts => ApplyFilters();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && !hasRendered)
+        {
+            var accountId = await SessionStorage.GetItemAsync<string>("AccountId");
+
+            if (!string.IsNullOrEmpty(accountId))
+            {
+                var account = await GetAccountDetails(accountId);
+                isAuthorized = account?.AccountRole == RoleEnums.Admin;
+            }
+            else
+            {
+                isAuthorized = false;
+            }
+
+            hasRendered = true;
+
+            if (!isAuthorized)
+            {
+                Navigation.NavigateTo("/login");
+            }
+            else
+            {
+                await LoadData();
+            }
+        }
+    }
+
+    private async Task LoadData()
+    {
+        try
+        {
+            accounts = AccountRepository.GetAllAccounts() ?? new List<Account>();
+            var (fetchedCenters, _) = VaccineCenterRepository.GetAllVaccineCenters(1, int.MaxValue);
+            centers = fetchedCenters ?? new List<VaccineCenter>();
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            accounts = new List<Account>();
+            centers = new List<VaccineCenter>();
+            StateHasChanged();
+        }
+    }
+
+    private void ShowAddAccountModal()
+    {
+        newAccount = new Account();
+        selectedCenterId = "";
+        phoneNumberString = "";
+        showModal = true;
+    }
+
+    private void CloseModal()
+    {
+        showModal = false;
+    }
+
+    private async Task HandleAddAccount()
+    {
+        if (newAccount.AccountRole == RoleEnums.Staff && !string.IsNullOrEmpty(selectedCenterId))
+        {
+            newAccount.FKCenterId = int.Parse(selectedCenterId);
+        }
+        AccountRepository.AddAccount(newAccount);
+        showModal = false;
+        await LoadData();
+    }
+
+    private void OnRoleChanged(ChangeEventArgs e)
+    {
+        newAccount.AccountRole = e.Value.ToString();
+        if (newAccount.AccountRole != RoleEnums.Staff)
+        {
+            newAccount.FKCenterId = null;
+            selectedCenterId = "";
+        }
+    }
+
+    private async Task<Account> GetAccountDetails(string accountId)
+    {
+        return await Task.FromResult(AccountRepository.GetAccountById(Guid.Parse(accountId)));
+    }
+
+    private List<Account> ApplyFilters()
+    {
+        if (accounts == null) return new List<Account>();
+
+        var result = accounts;
+
+        if (!string.IsNullOrWhiteSpace(searchTerm))
+        {
+            result = result.Where(a => 
+                a.UserName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) || 
+                a.Email.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)
+            ).ToList();
+        }
+
+        if (!string.IsNullOrWhiteSpace(roleFilter))
+        {
+            result = result.Where(a => a.AccountRole == roleFilter).ToList();
+        }
+
+        return result;
+    }
+
+    private async Task DeleteAccount(Guid accountId)
+    {
+        bool confirmed = await JSRuntime.InvokeAsync<bool>("confirm", "Are you sure you want to delete this account?");
+        
+        if (confirmed)
+        {
+            try
+            {
+                AccountRepository.DeleteAccount(accountId);
+                await LoadData();
+            }
+            catch (Exception ex)
+            {
+                await JSRuntime.InvokeVoidAsync("alert", "Failed to delete account: " + ex.Message);
+            }
+        }
+    }
+
+    private bool showEditModal = false;
+    private Account editAccount;
+    private string selectedEditCenterId;
+
+    private void ShowEditModal(Guid accountId)
+    {
+        editAccount = AccountRepository.GetAccountById(accountId);
+        selectedEditCenterId = editAccount.FKCenterId?.ToString() ?? "";
+        showEditModal = true;
+    }
+
+    private void CloseEditModal()
+    {
+        showEditModal = false;
+        editAccount = null;
+    }
+
+    private void OnEditRoleChanged(ChangeEventArgs e)
+    {
+        editAccount.AccountRole = e.Value.ToString();
+        if (editAccount.AccountRole != RoleEnums.Staff)
+        {
+            editAccount.FKCenterId = null;
+            selectedEditCenterId = "";
+        }
+    }
+
+    private async Task HandleEditSubmit()
+    {
+        try
+        {
+            if (editAccount.AccountRole == RoleEnums.Staff && !string.IsNullOrEmpty(selectedEditCenterId))
+            {
+                editAccount.FKCenterId = int.Parse(selectedEditCenterId);
+            }
+
+            AccountRepository.UpdateAccountDetails(
+                editAccount.AccountId,
+                editAccount.UserName,
+                editAccount.Email,
+                editAccount.AccountRole,
+                editAccount.Status
+            );
+
+            showEditModal = false;
+            await LoadData();
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", "Failed to update account: " + ex.Message);
+        }
+    }
+
+    // Update the EditAccount method to use the modal
+    private void EditAccount(Guid accountId)
+    {
+        ShowEditModal(accountId);
+    }
+}
