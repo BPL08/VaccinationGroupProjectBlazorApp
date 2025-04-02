@@ -1,0 +1,167 @@
+﻿@page "/customer/home"
+@inject IAccountRepository AccountRepository
+@inject IVaccineRepository VaccineRepository
+@inject IVaccineCenterRepository VaccineCenterRepository
+@inject IVaccinePackageDetailRepository VaccinePackageDetailRepository
+@inject IVaccineHistoryRepository VaccineHistoryRepository
+@inject IChildrenProfileRepository ChildrenProfileRepository
+@inject ISessionStorageService SessionStorage
+@inject NavigationManager Navigation
+@rendermode InteractiveServer
+
+<div class="container mt-4">
+    <!-- Header -->
+    <h2 class="text-center mb-4">Welcome to Vaccine Schedule System</h2>
+
+    <!-- Giới thiệu cơ sở tiêm chủng -->
+    <section class="mb-5">
+        <h3>Our Vaccination Centers</h3>
+        <div class="row">
+            @foreach (var center in VaccineCenters)
+            {
+                <div class="col-md-4">
+                    <div class="card mb-3 shadow">
+                        <div class="card-body">
+                            <h5 class="card-title">@center.Name</h5>
+                            <p class="card-text">
+                                <strong>Location:</strong> @center.Location<br />
+                                <strong>Contact:</strong> @center.ContactNumber<br />
+                                <strong>Email:</strong> @center.Email
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </section>
+
+    <!-- Dịch vụ tiêm chủng -->
+    <section class="mb-5">
+        <h3>Our Vaccination Services</h3>
+        <div class="row">
+            @foreach (var vaccine in Vaccines)
+            {
+                <div class="col-md-4">
+                    <div class="card mb-3 shadow">
+                        <div class="card-body">
+                            <h5 class="card-title">@vaccine.Name</h5>
+                            <p class="card-text">
+                                <strong>Category:</strong> @vaccine.Category?.CategoryName<br />
+                                <strong>Age Range:</strong> @vaccine.MinAge - @vaccine.MaxAge years<br />
+                                <strong>Price:</strong> @vaccine.Price VND
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </section>
+
+    <!-- Bảng giá -->
+    <section class="mb-5">
+        <h3>Pricing</h3>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Vaccine/Package</th>
+                    <th>Description</th>
+                    <th>Price (VND)</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var vaccine in Vaccines)
+                {
+                    <tr>
+                        <td>@vaccine.Name</td>
+                        <td>@vaccine.IngredientsDescription</td>
+                        <td>@vaccine.Price</td>
+                    </tr>
+                }
+                @foreach (var packageDetail in VaccinePackageDetails)
+                {
+                    <tr>
+                        <td>@packageDetail.VaccinePackage.PackageName</td>
+                        <td>@packageDetail.VaccinePackage.PackageDescription</td>
+                        <td>@packageDetail.PackagePrice</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </section>
+
+    <!-- Cẩm nang tiêm chủng -->
+    <section class="mb-5">
+        <h3>Vaccination Handbook</h3>
+        <p>Here’s some useful information for your children:</p>
+        @if (ChildrenProfiles.Any())
+        {
+            @foreach (var profile in ChildrenProfiles)
+            {
+                <h5>@profile.Name (DOB: @profile.DateOfBirth.ToShortDateString())</h5>
+                <ul>
+                    @foreach (var history in VaccineHistories.Where(h => h.FKProfileId == profile.ProfileId))
+                    {
+                        <li>
+                            <strong>@history.Vaccine.Name</strong>: Administered on @history.AdministeredDate.ToShortDateString()
+                            (Dose #@history.DosedNumber) at @history.Center.Name
+                        </li>
+                    }
+                </ul>
+            }
+        }
+        else
+        {
+            <p>No children profiles found. Add a profile to see vaccination history.</p>
+        }
+    </section>
+
+    <!-- Nút điều hướng -->
+    <div class="d-grid gap-2">
+        <button class="btn btn-primary" @onclick="NavigateToProfile">View Your Children’s Profiles</button>
+        <button class="btn btn-secondary" @onclick="NavigateToOrder">Book a Vaccination</button>
+    </div>
+</div>
+
+@code {
+    private List<VaccineCenter> VaccineCenters { get; set; } = new();
+    private List<Vaccine> Vaccines { get; set; } = new();
+    private List<VaccinePackageDetail> VaccinePackageDetails { get; set; } = new();
+    private List<ChildrenProfile> ChildrenProfiles { get; set; } = new();
+    private List<VaccineHistory> VaccineHistories { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Kiểm tra đăng nhập
+        var accountIdString = await SessionStorage.GetItemAsync<string>("AccountId");
+        if (string.IsNullOrEmpty(accountIdString) || !Guid.TryParse(accountIdString, out Guid accountId))
+        {
+            Navigation.NavigateTo("/login");
+            return;
+        }
+
+        // Kiểm tra vai trò
+        var account = AccountRepository.GetAccountById(accountId);
+        if (account?.AccountRole != RoleEnums.Customer)
+        {
+            Navigation.NavigateTo("/login");
+            return;
+        }
+
+        // Lấy dữ liệu từ các Repository
+        VaccineCenters = VaccineCenterRepository.GetAllVaccineCenters();
+        Vaccines = VaccineRepository.GetAllVaccines();
+        VaccinePackageDetails = VaccinePackageDetailRepository.GetAllVaccinePackageDetails();
+        ChildrenProfiles = ChildrenProfileRepository.GetProfilesByAccountId(accountId);
+        VaccineHistories = VaccineHistoryRepository.GetAllVaccineHistories();
+    }
+
+    private void NavigateToProfile()
+    {
+        Navigation.NavigateTo("/customer/children-profiles");
+    }
+
+    private void NavigateToOrder()
+    {
+        Navigation.NavigateTo("/customer/order");
+    }
+}

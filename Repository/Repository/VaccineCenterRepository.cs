@@ -8,6 +8,8 @@ namespace Repository.Repository
     {
         public void AddVaccineCenter(VaccineCenter center) => VaccineCenterDAO.Instance.AddCenter(center);
 
+        public List<VaccineCenter> GetAllVaccineCenters() => VaccineCenterDAO.Instance.GetAllCenters();
+
         public VaccineCenter GetVaccineCenterById(int centerId) => VaccineCenterDAO.Instance.GetCenterById(centerId);
 
         public (List<VaccineCenter> Centers, int TotalCount) GetAllVaccineCenters(int pageNumber, int pageSize)
