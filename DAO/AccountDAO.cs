@@ -1,4 +1,5 @@
 using BO.Entity;
+using BO.Enums;
 using DAO.Context;
 using Microsoft.EntityFrameworkCore;
 
@@ -127,7 +128,7 @@ namespace DAO
         {
             return _dbContext.Accounts
                 .Include(a => a.Center)
-                .SingleOrDefault(a => a.Email == email && a.Password == password && a.Status == "Active");
+                .SingleOrDefault(a => a.Email == email && a.Password == password && a.Status == ActivationEnums.ACTIVATE);
         }
     }
 }
