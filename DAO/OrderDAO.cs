@@ -95,5 +95,17 @@ namespace DAO
                 .Where(o => o.PurchaseDate >= startDate && o.PurchaseDate <= endDate)
                 .ToList();
         }
+
+        public List<Order> GetOrdersByAccountId(Guid accountId)
+        {
+            return _dbContext.Orders
+                .Join(_dbContext.ChildrenProfiles,
+                      order => order.FKProfileId,
+                      profile => profile.ProfileId,
+                      (order, profile) => new { Order = order, Profile = profile })
+                .Where(x => x.Profile.FKAccountId == accountId)
+                .Select(x => x.Order)
+                .ToList();
+        }
     }
 }

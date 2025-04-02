@@ -6,6 +6,8 @@ namespace Repository.Interface
     {
         void AddVaccinationSchedule(VaccinationSchedule schedule);
         VaccinationSchedule GetVaccinationScheduleById(Guid scheduleId);
+
+        List<VaccinationSchedule> GetSchedulesByAccountId(Guid accountId);
         List<VaccinationSchedule> GetAllVaccinationSchedules();
         List<VaccinationSchedule> GetVaccinationSchedulesByProfile(Guid profileId);
         List<VaccinationSchedule> GetVaccinationSchedulesByCenter(int centerId);

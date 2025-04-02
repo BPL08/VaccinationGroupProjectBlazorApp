@@ -24,6 +24,8 @@ namespace Repository.Repository
 
         public void DeleteVaccinationSchedule(Guid scheduleId) => VaccinationScheduleDAO.Instance.DeleteSchedule(scheduleId);
 
-     /*   public List<VaccinationSchedule> GetVaccinationSchedulesByOrderDetail(Guid orderDetailId) => VaccinationScheduleDAO.Instance.GetSchedulesByOrderDetail(orderDetailId);*/
+        public List<VaccinationSchedule> GetSchedulesByAccountId(Guid accountId) => VaccinationScheduleDAO.Instance.GetSchedulesByAccountId(accountId);
+
+        /*   public List<VaccinationSchedule> GetVaccinationSchedulesByOrderDetail(Guid orderDetailId) => VaccinationScheduleDAO.Instance.GetSchedulesByOrderDetail(orderDetailId);*/
     }
 }
