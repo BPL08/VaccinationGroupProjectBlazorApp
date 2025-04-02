@@ -41,8 +41,9 @@
                         <div class="mb-3">
                             <label class="form-label">Status</label>
                             <InputSelect @bind-Value="Schedule.Status" class="form-control">
-                                <option value="0">Pending</option>
-                                <option value="1">Active</option>
+                                <option value="0">@BO.Enums.ScheduleEnum.PENDING</option>
+                                <option value="1">@BO.Enums.ScheduleEnum.ATTENDED</option>
+                                <option value="2">@BO.Enums.ScheduleEnum.UNATTENDED</option>
                             </InputSelect>
                             <ValidationMessage For="@(() => Schedule.Status)" class="text-danger" />
                         </div>
