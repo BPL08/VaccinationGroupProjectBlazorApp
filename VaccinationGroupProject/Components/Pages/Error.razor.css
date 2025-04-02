@@ -1,0 +1,11 @@
+﻿.container {
+    max-width: 600px; /* Limits the width for a cleaner look */
+}
+
+h1 {
+    font-size: 2.5rem;
+}
+
+.lead {
+    font-size: 1.25rem;
+}

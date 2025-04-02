@@ -1,0 +1,188 @@
+﻿@page "/staff/vaccinehistorymanage"
+@inject ISessionStorageService SessionStorage
+@inject NavigationManager Navigation
+@inject IVaccineHistoryRepository VaccineHistoryRepository
+@inject IVaccineCenterRepository VaccineCenterRepository
+@inject IChildrenProfileRepository ChildrenProfileRepository
+@rendermode InteractiveServer
+
+<div class="container-fluid">
+    <div class="row">
+        <StaffNavBar />
+
+        <main class="col-md-9 col-lg-10 p-4">
+            <h3 class="mb-3">Manage Vaccination History</h3>
+            @if (!isAuthorized && hasRendered)
+            {
+                <div class="text-danger">Unauthorized access. Redirecting to error...</div>
+            }
+            else if (histories == null)
+            {
+                <p class="lead">Loading vaccination histories...</p>
+            }
+            else if (!histories.Any())
+            {
+                <div class="text-center p-4 bg-light border rounded">
+                    <p class="lead">No vaccination histories found.</p>
+                    <button class="btn btn-primary" @onclick="ShowAddModal">Add New History</button>
+                </div>
+            }
+            else
+            {
+                <div class="overflow-auto mt-3">
+                    <button class="btn btn-primary mb-3" @onclick="ShowAddModal">Add New History</button>
+                    <table class="table table-striped table-hover table-bordered">
+                        <thead class="table-dark">
+                            <tr>
+                                <th scope="col">Index</th>
+                                <th scope="col">Vaccine</th>
+                                <th scope="col">Profile</th>
+                                <th scope="col">Center</th>
+                                <th scope="col">Administered By</th>
+                                <th scope="col">Date</th>
+                                <th scope="col">Dose Number</th>
+                                <th scope="col">Status</th>
+                                <th scope="col">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @{
+                                int rowNumber = 1;
+                            }
+                            @foreach (var history in histories)
+                            {
+                                <tr>
+                                    <td>@rowNumber</td>
+                                    <td>@(history.Vaccine?.Name ?? "N/A")</td>
+                                    <td>@(history.Profile?.Name ?? "N/A")</td>
+                                    <td>@(history.Center?.Name ?? "N/A")</td>
+                                    <td>@(history.AdministeredBy ?? "N/A")</td>
+                                    <td>@history.AdministeredDate.ToString("MMM dd, yyyy")</td>
+                                    <td>@history.DosedNumber</td>
+                                    <td>
+                                        <span class="badge @(history.VerifiedStatus == 1 ? "bg-success" : "bg-warning")">
+                                            @(history.VerifiedStatus == 1 ? "Verified" : "Pending")
+                                        </span>
+                                    </td>
+                                    <td class="action-cell">
+                                        <button class="btn btn-primary btn-sm" @onclick="() => ShowUpdateModal(history)">Edit</button>
+                                    </td>
+                                </tr>
+                                rowNumber++;
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+
+            <!-- Add Modal -->
+            <AddVaccineHistoryModal ShowModal="@showAddModal"
+                                    OnClose="CloseAddModal"
+                                    OnSave="RefreshData" />
+
+            <!-- Update Modal -->
+            <UpdateVaccineHistoryModal ShowModal="@showUpdateModal"
+                                       History="@selectedHistory"
+                                       OnClose="CloseUpdateModal"
+                                       OnSave="RefreshData" />
+        </main>
+    </div>
+</div>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+@code {
+    private bool hasRendered = false;
+    private bool isAuthorized = false;
+    private List<VaccineHistory> histories = new();
+    private bool showAddModal = false;
+    private bool showUpdateModal = false;
+    private VaccineHistory? selectedHistory;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && !hasRendered)
+        {
+            var accountId = await SessionStorage.GetItemAsync<string>("AccountId");
+
+            if (!string.IsNullOrEmpty(accountId))
+            {
+                var account = await GetAccountDetails(accountId);
+                isAuthorized = account?.AccountRole == "Staff";
+            }
+            else
+            {
+                isAuthorized = false;
+            }
+
+            hasRendered = true;
+
+            if (!isAuthorized)
+            {
+                Navigation.NavigateTo("/Error");
+            }
+            else
+            {
+                await LoadData();
+            }
+        }
+    }
+
+    private async Task LoadData()
+    {
+        try
+        {
+            histories = VaccineHistoryRepository.GetAllVaccineHistories() ?? new List<VaccineHistory>();
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            histories = new List<VaccineHistory>();
+            StateHasChanged();
+        }
+    }
+
+    private void ShowAddModal()
+    {
+        showAddModal = true;
+    }
+
+    private void CloseAddModal()
+    {
+        showAddModal = false;
+    }
+
+    private void ShowUpdateModal(VaccineHistory history)
+    {
+        selectedHistory = new VaccineHistory
+            {
+                VacineHistoryId = history.VacineHistoryId,
+                FKVaccineId = history.FKVaccineId,
+                FKProfileId = history.FKProfileId,
+                AdministeredBy = history.AdministeredBy,
+                FKCenterId = history.FKCenterId,
+                AdministeredDate = history.AdministeredDate,
+                DosedNumber = history.DosedNumber,
+                Notes = history.Notes,
+                VerifiedStatus = history.VerifiedStatus
+            };
+        showUpdateModal = true;
+    }
+
+    private async Task CloseUpdateModal()
+    {
+        showUpdateModal = false;
+        await Task.CompletedTask;
+    }
+
+    private async Task RefreshData()
+    {
+        await LoadData();
+    }
+
+    private async Task<Account> GetAccountDetails(string accountId)
+    {
+        return await Task.FromResult(new Account { AccountRole = "Staff" });
+    }
+}

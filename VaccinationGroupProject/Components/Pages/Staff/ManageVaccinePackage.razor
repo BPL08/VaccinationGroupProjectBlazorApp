@@ -55,7 +55,8 @@
                                     </td>
                                     <td>@GetTotalPrice(package.VaccinePackageId)</td>
                                     <td>
-                                        <button class="btn btn-info btn-sm" @onclick="() => ViewPackageDetails(package.VaccinePackageId)">View Details</button>
+                                        <button class="btn btn-info btn-sm me-2" @onclick="() => ViewPackageDetails(package.VaccinePackageId)">View Details</button>
+                                        <button class="btn btn-warning btn-sm" @onclick="() => ShowUpdatePackageModal(package)">Update</button>
                                     </td>
                                 </tr>
                             }
@@ -64,6 +65,7 @@
                 </div>
             }
 
+            <!-- Add Package Modal -->
             @if (showModal)
             {
                 <div class="modal fade show d-block" tabindex="-1" @onclick="CloseModal">
@@ -106,6 +108,49 @@
                     </div>
                 </div>
             }
+
+            <!-- Update Package Modal -->
+            @if (showUpdateModal)
+            {
+                <div class="modal fade show d-block" tabindex="-1" @onclick="CloseUpdateModal">
+                    <div class="modal-dialog modal-dialog-centered" @onclick:stopPropagation>
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h4 class="modal-title">Update Vaccine Package</h4>
+                                <button type="button" class="btn-close" @onclick="CloseUpdateModal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <EditForm Model="@selectedPackage" OnValidSubmit="HandleUpdatePackage">
+                                    <DataAnnotationsValidator />
+                                    <ValidationSummary class="text-danger" />
+                                    <div class="mb-3">
+                                        <label class="form-label">Package Name</label>
+                                        <InputText @bind-Value="selectedPackage.PackageName" class="form-control" />
+                                        <ValidationMessage For="@(() => selectedPackage.PackageName)" class="text-danger" />
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Description</label>
+                                        <InputTextArea @bind-Value="selectedPackage.PackageDescription" class="form-control" />
+                                        <ValidationMessage For="@(() => selectedPackage.PackageDescription)" class="text-danger" />
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Status</label>
+                                        <InputSelect @bind-Value="selectedPackage.PackageStatus" class="form-control">
+                                            <option value="1">Active</option>
+                                            <option value="0">Inactive</option>
+                                        </InputSelect>
+                                        <ValidationMessage For="@(() => selectedPackage.PackageStatus)" class="text-danger" />
+                                    </div>
+                                    <div class="d-flex gap-2">
+                                        <button type="submit" class="btn btn-primary">Update</button>
+                                        <button type="button" class="btn btn-secondary" @onclick="CloseUpdateModal">Cancel</button>
+                                    </div>
+                                </EditForm>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
         </main>
     </div>
 </div>
@@ -118,7 +163,9 @@
     private bool isAuthorized = false;
     private List<VaccinePackage> packages;
     private bool showModal = false;
+    private bool showUpdateModal = false;
     private VaccinePackage newPackage = new VaccinePackage();
+    private VaccinePackage selectedPackage = new VaccinePackage();
     private Dictionary<int, int> packageTotalPrices = new Dictionary<int, int>();
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -187,15 +234,39 @@
         showModal = true;
     }
 
+    private void ShowUpdatePackageModal(VaccinePackage package)
+    {
+        selectedPackage = new VaccinePackage
+            {
+                VaccinePackageId = package.VaccinePackageId,
+                PackageName = package.PackageName,
+                PackageDescription = package.PackageDescription,
+                PackageStatus = package.PackageStatus
+            };
+        showUpdateModal = true;
+    }
+
     private void CloseModal()
     {
         showModal = false;
+    }
+
+    private void CloseUpdateModal()
+    {
+        showUpdateModal = false;
     }
 
     private async Task HandleAddPackage()
     {
         VaccinePackageRepository.AddVaccinePackage(newPackage);
         showModal = false;
+        await LoadData();
+    }
+
+    private async Task HandleUpdatePackage()
+    {
+        VaccinePackageRepository.UpdateVaccinePackage(selectedPackage.VaccinePackageId, selectedPackage);
+        showUpdateModal = false;
         await LoadData();
     }
 

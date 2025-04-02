@@ -1,4 +1,5 @@
 using BO.Entity;
+using DAO;
 
 namespace Repository.Interface
 {
@@ -7,12 +8,14 @@ namespace Repository.Interface
         void AddVaccinePackage(VaccinePackage package);
         VaccinePackage GetVaccinePackageById(int packageId);
         List<VaccinePackage> GetAllVaccinePackages();
-  /*      List<VaccinePackage> GetActivePackages();
-        List<VaccinePackage> GetPackagesByAgeGroup(string ageGroup);
-        List<VaccinePackage> GetPackagesByPriceRange(decimal minPrice, decimal maxPrice);
-        void UpdateVaccinePackage(int packageId, VaccinePackage package);
-        void DeleteVaccinePackage(int packageId);
-        List<VaccinePackage> GetPackagesByStatus(string status);
-        List<VaccinePackage> GetPackagesByVaccine(int vaccineId);*/
+        /*      List<VaccinePackage> GetActivePackages();
+              List<VaccinePackage> GetPackagesByAgeGroup(string ageGroup);
+              List<VaccinePackage> GetPackagesByPriceRange(decimal minPrice, decimal maxPrice);
+              void UpdateVaccinePackage(int packageId, VaccinePackage package);
+              void DeleteVaccinePackage(int packageId);
+              List<VaccinePackage> GetPackagesByStatus(string status);
+              List<VaccinePackage> GetPackagesByVaccine(int vaccineId);*/
+
+        void UpdateVaccinePackage(int packageId, VaccinePackage package) ;
     }
 }
