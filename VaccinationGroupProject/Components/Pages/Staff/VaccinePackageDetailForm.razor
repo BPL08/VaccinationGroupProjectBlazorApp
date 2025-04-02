@@ -1,0 +1,42 @@
+﻿@inject IVaccineRepository VaccineRepository
+
+<EditForm Model="@Detail" OnValidSubmit="OnSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary class="text-danger" />
+    <div class="mb-3">
+        <label class="form-label">Vaccine</label>
+        <InputSelect @bind-Value="Detail.FKVaccineId" class="form-control" disabled="@IsUpdate">
+            <option value="">Select Vaccine</option>
+            @foreach (var vaccine in Vaccines)
+            {
+                <option value="@vaccine.VaccineId">@vaccine.Name</option>
+            }
+        </InputSelect>
+        <ValidationMessage For="@(() => Detail.FKVaccineId)" class="text-danger" />
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Price</label>
+        <InputNumber @bind-Value="Detail.PackagePrice" class="form-control" />
+        <ValidationMessage For="@(() => Detail.PackagePrice)" class="text-danger" />
+    </div>
+    <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-primary">@SubmitButtonText</button>
+        <button type="button" class="btn btn-secondary" @onclick="OnCancel">Cancel</button>
+    </div>
+</EditForm>
+
+@code {
+    [Parameter] public VaccinePackageDetail Detail { get; set; }
+    [Parameter] public List<Vaccine> Vaccines { get; set; }
+    [Parameter] public EventCallback OnSubmit { get; set; }
+    [Parameter] public EventCallback OnCancel { get; set; }
+    [Parameter] public string SubmitButtonText { get; set; } = "Save";
+    [Parameter] public bool IsUpdate { get; set; } = false;
+
+    private List<Vaccine> VaccinesInternal;
+
+    protected override async Task OnInitializedAsync()
+    {
+        VaccinesInternal = Vaccines ?? VaccineRepository.GetAllVaccines() ?? new List<Vaccine>();
+    }
+}

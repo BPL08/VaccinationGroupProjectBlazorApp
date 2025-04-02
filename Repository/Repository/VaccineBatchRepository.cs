@@ -23,5 +23,6 @@ namespace Repository.Repository
         public List<VaccineBatch> GetBatchesByExpiryDate(DateTime expiryDate) => VaccineBatchDAO.Instance.GetBatchesByExpiryDate(expiryDate);
 
         public List<VaccineBatch> GetBatchesByManufacturer(string manufacturer) => VaccineBatchDAO.Instance.GetBatchesByManufacturer(manufacturer);*/
+
     }
 }
