@@ -1,12 +1,13 @@
-@page "/admin/account"
+@page "/admin/accounts"
 @using VaccinationGroupProject.Components.Admin
-@layout AdminLayout
 @inject IAccountRepository AccountRepository
 @inject IVaccineCenterRepository VaccineCenterRepository
 @inject ISessionStorageService SessionStorage
 @inject NavigationManager NavigationManager
 @inject IJSRuntime JSRuntime
 @rendermode InteractiveServer
+@layout AdminLayout
+
 
 @if (isAuthenticated)
 {
