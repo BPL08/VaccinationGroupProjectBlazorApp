@@ -356,7 +356,7 @@
                             AppointmentDate = item.AppointmentDate,
                             ActualDate = null,
                             AdministeredBy = "Pending",
-                            Status = 1 // Pending
+                            Status = 0 // Pending
                         };
                     VaccinationScheduleRepository.AddVaccinationSchedule(schedule);
                 }
@@ -385,7 +385,7 @@
                                 AppointmentDate = item.AppointmentDate,
                                 ActualDate = null,
                                 AdministeredBy = "Pending",
-                                Status = 1 // Pending
+                                Status = 0 // Pending
                             };
                         VaccinationScheduleRepository.AddVaccinationSchedule(schedule);
                     }
