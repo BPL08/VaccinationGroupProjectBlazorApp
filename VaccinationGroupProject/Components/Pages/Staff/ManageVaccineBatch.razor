@@ -207,7 +207,17 @@
 
     private async Task HandleAddBatch()
     {
-        // Check if batch number already exists
+        batchNumberErrorMessage = "";
+
+        if (string.IsNullOrWhiteSpace(newBatch.BatchNumber) ||
+            string.IsNullOrWhiteSpace(selectedCenterId) ||
+            string.IsNullOrWhiteSpace(newBatch.ActiveStatus))
+        {
+            batchNumberErrorMessage = "A field is missing. Please fill in all required fields.";
+            StateHasChanged();
+            return;
+        }
+
         if (VaccineBatchRepository.BatchNumberExists(newBatch.BatchNumber))
         {
             batchNumberErrorMessage = "This batch number already exists. Please use a unique batch number.";
@@ -220,9 +230,9 @@
             newBatch.FKCenterId = int.Parse(selectedCenterId);
         }
 
+        // Add the new batch
         VaccineBatchRepository.AddVaccineBatch(newBatch);
         showAddModal = false;
-        batchNumberErrorMessage = "";
         await LoadData();
     }
 
