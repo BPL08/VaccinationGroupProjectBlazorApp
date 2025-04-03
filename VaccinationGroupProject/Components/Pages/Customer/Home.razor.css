@@ -100,20 +100,62 @@ body {
 
 .table th, .table td {
     vertical-align: middle;
+    font-size: 0.9rem;
+    padding: 10px;
 }
 
 .table-hover tbody tr:hover {
     background-color: #e9ecef;
 }
 
-/* Handbook */
-.list-group-item {
-    border: none;
-    padding: 15px;
+/* Vaccination Services */
+.section-services .table th {
+    font-size: 0.85rem;
+}
+
+.section-services .accordion-button {
     background-color: #fff;
-    margin-bottom: 10px;
+    color: #333;
+    border-radius: 8px 8px 0 0;
+    transition: all 0.3s ease;
+}
+
+    .section-services .accordion-button:not(.collapsed) {
+        background-color: #e9f7ff;
+        color: #007bff;
+    }
+
+.section-services .accordion-item {
+    border: none;
     border-radius: 8px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+}
+
+.section-services .list-group-item {
+    border: none;
+    padding: 10px;
+    background-color: #f8f9fa;
+    margin-bottom: 5px;
+    border-radius: 5px;
+}
+
+/* Handbook */
+.section-handbook .accordion-button {
+    background-color: #fff;
+    color: #333;
+    border-radius: 8px 8px 0 0;
+    transition: all 0.3s ease;
+}
+
+    .section-handbook .accordion-button:not(.collapsed) {
+        background-color: #e9f7ff;
+        color: #007bff;
+    }
+
+.section-handbook .accordion-item {
+    border: none;
+    border-radius: 8px;
+    overflow: hidden;
 }
 
 /* Responsive */
@@ -135,54 +177,17 @@ body {
         font-size: 1.2rem;
     }
 
-    .accordion-button {
-        background-color: #fff;
-        color: #333;
-        border-radius: 8px 8px 0 0;
-        transition: all 0.3s ease;
+    .table th, .table td {
+        font-size: 0.8rem;
+        padding: 8px;
     }
 
-        .accordion-button:not(.collapsed) {
-            background-color: #e9f7ff;
-            color: #007bff;
-        }
-
-    .accordion-item {
-        border: none;
-        border-radius: 8px;
-        overflow: hidden;
+    .section-services .table-responsive,
+    .section-handbook .table-responsive {
+        font-size: 0.85rem;
     }
 
-    /* Timeline */
-    .timeline {
-        position: relative;
-        padding-left: 30px;
-    }
-
-    .timeline-item {
-        position: relative;
-        margin-bottom: 20px;
-    }
-
-    .timeline-dot {
-        position: absolute;
-        left: -25px;
-        top: 10px;
-        width: 12px;
-        height: 12px;
-        background-color: #00c4cc;
-        border-radius: 50%;
-        border: 2px solid #fff;
-        box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
-    }
-
-    .timeline-content {
-        background-color: #fff;
-        border-radius: 8px;
-        transition: transform 0.3s ease;
-    }
-
-    .timeline-content:hover {
-         transform: translateX(5px);
+    .section-services .accordion-body {
+        padding: 10px;
     }
 }
