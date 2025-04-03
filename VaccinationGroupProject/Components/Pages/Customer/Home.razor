@@ -398,7 +398,7 @@
                                     <td>@(vaccine?.Name ?? "N/A")</td>
                                     <td>@(center?.Name ?? "N/A")</td>
                                     <td>@schedule.AppointmentDate.ToShortDateString()</td>
-                                    <td>@(schedule.Status == 1 ? "Pending" : "Completed")</td>
+                                    <td>@(schedule.Status == 0 ? "Pending" : "Completed")</td>
                                 </tr>
                             }
                         </tbody>
