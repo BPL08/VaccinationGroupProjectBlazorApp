@@ -4,6 +4,8 @@
 @inject ISessionStorageService SessionStorage
 @inject IAccountRepository AccountRepository
 @inject IVaccineCenterRepository VaccineCenterRepository
+@inject IVaccineRepository VaccineRepository
+@inject IVaccinationScheduleRepository VaccinationScheduleRepository
 @rendermode InteractiveServer
 @layout AdminLayout
 
@@ -39,7 +41,7 @@
                     <i class="bi bi-clipboard2-pulse-fill"></i>
                 </div>
                 <div class="stat-info">
-                    <h3>120+</h3>
+                    <h3>@scheduleCount</h3>
                     <p>Lịch hẹn</p>
                 </div>
             </div>
@@ -48,7 +50,7 @@
                     <i class="bi bi-virus"></i>
                 </div>
                 <div class="stat-info">
-                    <h3>30+</h3>
+                    <h3>@vaccineCount</h3>
                     <p>Vaccine</p>
                 </div>
             </div>
@@ -96,18 +98,6 @@
                     </div>
                 </div>
                 
-                <div class="menu-card">
-                    <div class="menu-icon bg-info">
-                        <i class="bi bi-calendar-check"></i>
-                    </div>
-                    <div class="menu-content">
-                        <h4>Quản lý lịch hẹn</h4>
-                        <p>Xem và quản lý lịch hẹn tiêm chủng</p>
-                    </div>
-                    <div class="menu-arrow">
-                        <i class="bi bi-chevron-right"></i>
-                    </div>
-                </div>
             </div>
         </div>
     </div>
@@ -139,11 +129,8 @@ else
     private bool isFirstRender = true;
     private int userCount = 0;
     private int centerCount = 0;
-
-    protected override async Task OnInitializedAsync()
-    {
-        await LoadDashboardData();
-    }
+    private int scheduleCount = 0;
+    private int vaccineCount = 0;
 
     private async Task LoadDashboardData()
     {
@@ -154,11 +141,22 @@ else
 
             var centers = VaccineCenterRepository.GetAllVaccineCenters();
             centerCount = centers?.Count ?? 0;
+
+            var schedules = VaccinationScheduleRepository.GetAllVaccinationSchedules();
+            scheduleCount = schedules?.Count ?? 0;
+
+            var vaccines = VaccineRepository.GetAllVaccines();
+            vaccineCount = vaccines?.Count ?? 0;
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Error loading dashboard data: {ex.Message}");
         }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDashboardData();
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
