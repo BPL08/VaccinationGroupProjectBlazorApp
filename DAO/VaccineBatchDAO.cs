@@ -85,5 +85,10 @@ namespace DAO
                 .Where(vb => vb.ActiveStatus == status)
                 .ToList();
         }
+        public bool BatchNumberExists(string batchNumber)
+        {
+            return _dbContext.VaccineBatches
+                .Any(vb => vb.BatchNumber.ToLower() == batchNumber.ToLower());
+        }
     }
 }

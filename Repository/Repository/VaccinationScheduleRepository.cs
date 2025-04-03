@@ -20,8 +20,29 @@ namespace Repository.Repository
 
         public List<VaccinationSchedule> GetVaccinationSchedulesByStatus(int status) => VaccinationScheduleDAO.Instance.GetSchedulesByStatus(status);
 
-        public void UpdateVaccinationSchedule(Guid scheduleId, VaccinationSchedule schedule) => VaccinationScheduleDAO.Instance.UpdateSchedule(scheduleId, schedule);
-
+        public void UpdateVaccinationSchedule(Guid scheduleId, VaccinationSchedule schedule)
+        {
+            try
+            {
+                VaccinationScheduleDAO.Instance.UpdateSchedule(scheduleId, schedule);
+                if (VaccinationScheduleDAO.Instance.AreAllSchedulesCompleted(scheduleId))
+                {
+                    var order = VaccinationScheduleDAO.Instance.FindOrderByVaccinationScheduleId(scheduleId);
+                    if (order != null)
+                    {
+                        var orderId = order.OrderId;
+                        int totalPaidPrice = OrderDAO.Instance.GetTotalPriceOfOrderDetails(orderId);
+                        order.Status = 2; 
+                        order.TotalPaidPrice = totalPaidPrice;
+                        OrderDAO.Instance.UpdateOrder(orderId, order);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error updating vaccination schedule: {ex.Message}", ex);
+            }
+        }
         public void DeleteVaccinationSchedule(Guid scheduleId) => VaccinationScheduleDAO.Instance.DeleteSchedule(scheduleId);
 
         public List<VaccinationSchedule> GetSchedulesByAccountId(Guid accountId) => VaccinationScheduleDAO.Instance.GetSchedulesByAccountId(accountId);
@@ -31,6 +52,11 @@ namespace Repository.Repository
 
         public OrderDetail GetOrderDetailByVaccinationScheduleId(Guid vaccinationScheduleId) => VaccinationScheduleDAO.Instance.GetOrderDetailByVaccinationScheduleId(vaccinationScheduleId);
 
+
+        public bool AreAllSchedulesCompleted(Guid vaccinationScheduleId)
+            => VaccinationScheduleDAO.Instance.AreAllSchedulesCompleted(vaccinationScheduleId);
+
+       
         /*   public List<VaccinationSchedule> GetVaccinationSchedulesByOrderDetail(Guid orderDetailId) => VaccinationScheduleDAO.Instance.GetSchedulesByOrderDetail(orderDetailId);*/
     }
 }

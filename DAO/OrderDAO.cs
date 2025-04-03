@@ -107,5 +107,19 @@ namespace DAO
                 .Select(x => x.Order)
                 .ToList();
         }
+        public int GetTotalPriceOfOrderDetails(Guid orderId)
+        {
+            try
+            {
+                var totalPrice = _dbContext.OrderDetails
+                    .Where(od => od.FKOrderId == orderId)
+                    .Sum(od => od.TotalPrice);
+                return totalPrice;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error calculating total price of order details: {ex.Message}", ex);
+            }
+        }
     }
 }
