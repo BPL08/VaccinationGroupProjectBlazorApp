@@ -1,0 +1,212 @@
+﻿@page "/customer/order-details"
+@inject ISessionStorageService SessionStorage
+@inject NavigationManager Navigation
+@inject IAccountRepository AccountRepository
+@inject IOrderRepository OrderRepository
+@inject IOrderDetailRepository OrderDetailRepository
+@inject IVaccineRepository VaccineRepository
+@inject IVaccinePackageRepository VaccinePackageRepository
+@inject IVaccinePackageDetailRepository VaccinePackageDetailRepository
+@inject IChildrenProfileRepository ChildrenProfileRepository
+@inject IVaccineCategoryRepository VaccineCategoryRepository
+@using BO.Entity
+@using BO.Enums
+@rendermode InteractiveServer
+
+<div class="container mt-5">
+    <div class="d-flex align-items-center mb-4">
+        <button class="btn btn-secondary me-3" @onclick="GoBack">
+            <i class="bi bi-arrow-left"></i> Back
+        </button>
+        <h2 class="text-center mb-0 text-primary fw-bold">Order Details</h2>
+    </div>
+
+    @if (!isAuthorized && hasRendered)
+    {
+        <div class="alert alert-danger text-center">Unauthorized access. Redirecting to login...</div>
+    }
+    else if (orders == null || orderDetails == null || vaccines == null || vaccinePackages == null || vaccinePackageDetails == null || childrenProfiles == null || categories == null)
+    {
+        <p class="lead text-center text-muted">Loading data...</p>
+    }
+    else if (!orders.Any())
+    {
+        <p class="lead text-center text-muted">You have no orders yet.</p>
+    }
+    else
+    {
+        <div class="accordion" id="orderAccordion">
+            @foreach (var order in orders)
+            {
+                var profile = childrenProfiles.FirstOrDefault(p => p.ProfileId == order.FKProfileId);
+                var details = orderDetails.Where(od => od.FKOrderId == order.OrderId).ToList();
+                <div class="accordion-item shadow-sm mb-3">
+                    <h2 class="accordion-header" id="heading-@order.OrderId">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-@order.OrderId" aria-expanded="true" aria-controls="collapse-@order.OrderId">
+                            <span class="fw-bold text-primary">Order #@order.OrderId.ToString().Substring(0, 8)</span>
+                            <span class="text-muted ms-2">(@order.PurchaseDate.ToShortDateString()) - @profile?.Name</span>
+                        </button>
+                    </h2>
+                    <div id="collapse-@order.OrderId" class="accordion-collapse collapse show" aria-labelledby="heading-@order.OrderId" data-bs-parent="#orderAccordion">
+                        <div class="accordion-body">
+                            <div class="table-responsive">
+                                <table class="table table-striped table-hover table-bordered">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th>Item</th>
+                                            <th>Type</th>
+                                            <th>Category</th>
+                                            <th>Min Age</th>
+                                            <th>Max Age</th>
+                                            <th>Ingredients</th>
+                                            <th>Price (VND)</th>
+                                            <th>Production Date</th>
+                                            <th>Expiration Date</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var detail in details)
+                                        {
+                                            if (detail.FKVaccineId.HasValue)
+                                            {
+                                                var vaccine = vaccines.FirstOrDefault(v => v.VaccineId == detail.FKVaccineId);
+                                                var category = categories.FirstOrDefault(c => c.VaccineCategoryId == vaccine?.FKCategoryId);
+                                                <tr>
+                                                    <td>@vaccine?.Name</td>
+                                                    <td>Vaccine</td>
+                                                    <td>@(category?.CategoryName ?? "N/A")</td>
+                                                    <td>@vaccine?.MinAge</td>
+                                                    <td>@vaccine?.MaxAge</td>
+                                                    <td>@(vaccine?.IngredientsDescription ?? "N/A")</td>
+                                                    <td>@detail.TotalPrice.ToString("N0")</td>
+                                                    <td>@vaccine?.ProductionDate.ToShortDateString()</td>
+                                                    <td>@vaccine?.ExpirationDate.ToShortDateString()</td>
+                                                </tr>
+                                            }
+                                            else if (detail.FKVaccinePackageId.HasValue)
+                                            {
+                                                var package = vaccinePackages.FirstOrDefault(p => p.VaccinePackageId == detail.FKVaccinePackageId);
+                                                var packageVaccines = vaccinePackageDetails.Where(d => d.FKVaccinePackageId == package.VaccinePackageId).Select(d => vaccines.FirstOrDefault(v => v.VaccineId == d.FKVaccineId)).ToList();
+                                                <tr>
+                                                    <td>@package?.PackageName</td>
+                                                    <td>Vaccine Package</td>
+                                                    <td colspan="4">
+                                                        <strong>Description:</strong> @(package?.PackageDescription ?? "N/A")<br />
+                                                        <strong>Vaccines Included:</strong>
+                                                        <ul>
+                                                            @foreach (var pkgVaccine in packageVaccines)
+                                                            {
+                                                                var pkgCategory = categories.FirstOrDefault(c => c.VaccineCategoryId == pkgVaccine.FKCategoryId);
+                                                                <li>
+                                                                    @pkgVaccine.Name<br />
+                                                                    <small>
+                                                                        Category: @(pkgCategory?.CategoryName ?? "N/A") |
+                                                                        Age: @pkgVaccine.MinAge - @pkgVaccine.MaxAge |
+                                                                        Ingredients: @(pkgVaccine.IngredientsDescription ?? "N/A") |
+                                                                        Price: @vaccinePackageDetails.FirstOrDefault(d => d.FKVaccineId == pkgVaccine.VaccineId && d.FKVaccinePackageId == package.VaccinePackageId)?.PackagePrice.ToString("N0") VND
+                                                                    </small>
+                                                                </li>
+                                                            }
+                                                        </ul>
+                                                    </td>
+                                                    <td>@detail.TotalPrice.ToString("N0")</td>
+                                                    <td colspan="2">N/A (Package)</td>
+                                                </tr>
+                                            }
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                            <p class="fw-bold text-end">Total Amount: @order.TotalAmountPrice.ToString("N0") VND</p>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+<link rel="stylesheet" href="customer/OrderDetails.razor.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+@code {
+    private bool hasRendered = false;
+    private bool isAuthorized = false;
+    private List<Order> orders;
+    private List<OrderDetail> orderDetails;
+    private List<Vaccine> vaccines;
+    private List<VaccinePackage> vaccinePackages;
+    private List<VaccinePackageDetail> vaccinePackageDetails;
+    private List<ChildrenProfile> childrenProfiles;
+    private List<VaccineCategory> categories;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && !hasRendered)
+        {
+            var accountIdString = await SessionStorage.GetItemAsync<string>("AccountId");
+
+            if (string.IsNullOrEmpty(accountIdString) || !Guid.TryParse(accountIdString, out Guid accountId))
+            {
+                isAuthorized = false;
+            }
+            else
+            {
+                var account = await GetAccountDetails(accountId);
+                isAuthorized = account?.AccountRole == RoleEnums.Customer;
+            }
+
+            hasRendered = true;
+
+            if (!isAuthorized)
+            {
+                Navigation.NavigateTo("/login");
+            }
+            else
+            {
+                await LoadData();
+            }
+        }
+    }
+
+    private async Task LoadData()
+    {
+        try
+        {
+            var accountIdString = await SessionStorage.GetItemAsync<string>("AccountId");
+            Guid.TryParse(accountIdString, out Guid accountId);
+
+            orders = OrderRepository.GetOrdersByAccountId(accountId) ?? new List<Order>();
+            orderDetails = OrderDetailRepository.GetAllOrderDetails() ?? new List<OrderDetail>();
+            vaccines = VaccineRepository.GetAllVaccines() ?? new List<Vaccine>();
+            vaccinePackages = VaccinePackageRepository.GetAllVaccinePackages() ?? new List<VaccinePackage>();
+            vaccinePackageDetails = VaccinePackageDetailRepository.GetAllVaccinePackageDetails() ?? new List<VaccinePackageDetail>();
+            childrenProfiles = ChildrenProfileRepository.GetProfilesByAccountId(accountId) ?? new List<ChildrenProfile>();
+            categories = VaccineCategoryRepository.GetAllVaccineCategories() ?? new List<VaccineCategory>();
+
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            orders = new List<Order>();
+            orderDetails = new List<OrderDetail>();
+            vaccines = new List<Vaccine>();
+            vaccinePackages = new List<VaccinePackage>();
+            vaccinePackageDetails = new List<VaccinePackageDetail>();
+            childrenProfiles = new List<ChildrenProfile>();
+            categories = new List<VaccineCategory>();
+            StateHasChanged();
+        }
+    }
+
+    private async Task<Account> GetAccountDetails(Guid accountId)
+    {
+        return await Task.FromResult(AccountRepository.GetAccountById(accountId));
+    }
+
+    private void GoBack()
+    {
+        Navigation.NavigateTo("/customer/home");
+    }
+}

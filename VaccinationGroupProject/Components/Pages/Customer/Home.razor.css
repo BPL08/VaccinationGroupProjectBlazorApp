@@ -185,4 +185,33 @@ body {
     .timeline-content:hover {
          transform: translateX(5px);
     }
+
+    .input-group {
+        max-width: 500px;
+    }
+
+    .form-control {
+        border-radius: 20px 0 0 20px;
+        border: 1px solid #ced4da;
+        padding: 10px 15px;
+        font-size: 1rem;
+        transition: border-color 0.3s ease;
+    }
+
+        .form-control:focus {
+            border-color: #007bff;
+            box-shadow: none;
+        }
+
+    .btn-primary {
+        border-radius: 0 20px 20px 0;
+        padding: 10px 20px;
+        background-color: #007bff;
+        border: none;
+        transition: background-color 0.3s ease;
+    }
+
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
 }

@@ -25,6 +25,9 @@
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav ms-auto">
                 <li class="nav-item">
+                    <button class="btn btn-outline-light mx-2" @onclick="NavigateToOrderDetails">View Order Details</button>
+                </li>
+                <li class="nav-item">
                     <button class="btn btn-outline-light mx-2" @onclick="NavigateToProfile">View Your Profile</button>
                 </li>
                 <li class="nav-item">
@@ -86,7 +89,17 @@
         <!-- Vaccination Services -->
         <section class="section-services my-5">
             <h2 class="section-title">Our Vaccination Services</h2>
-            @if (!vaccines.Any() && !vaccinePackages.Any())
+            <div class="mb-4">
+                <div class="input-group w-50 mx-auto">
+                    <input type="text" class="form-control" placeholder="Search vaccines or packages..." @bind="searchQuery" @bind:event="oninput" />
+                    <button class="btn btn-primary" type="button" @onclick="Search">Search</button>
+                </div>
+            </div>
+            @if (filteredVaccines == null || filteredVaccinePackages == null)
+            {
+                <p class="text-muted text-center">Loading vaccination services...</p>
+            }
+            else if (!filteredVaccines.Any() && !filteredVaccinePackages.Any())
             {
                 <p class="text-muted">No vaccination services available.</p>
             }
@@ -339,6 +352,9 @@
     private List<Order> orders;
     private List<OrderDetail> orderDetails;
     private List<VaccinationSchedule> vaccinationSchedules;
+    private string searchQuery = "";
+private List<Vaccine> filteredVaccines;
+private List<VaccinePackage> filteredVaccinePackages;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -365,8 +381,25 @@
             else
             {
                 await LoadData();
+                filteredVaccines = vaccines ?? new List<Vaccine>(); // Đảm bảo không null
+                filteredVaccinePackages = vaccinePackages ?? new List<VaccinePackage>(); // Đảm bảo không null
             }
         }
+    }
+
+    private void Search()
+    {
+        if (string.IsNullOrWhiteSpace(searchQuery))
+        {
+            filteredVaccines = vaccines;
+            filteredVaccinePackages = vaccinePackages;
+        }
+        else
+        {
+            filteredVaccines = vaccines.Where(v => v.Name.Contains(searchQuery, StringComparison.OrdinalIgnoreCase)).ToList();
+            filteredVaccinePackages = vaccinePackages.Where(p => p.PackageName.Contains(searchQuery, StringComparison.OrdinalIgnoreCase)).ToList();
+        }
+        StateHasChanged();
     }
 
     private async Task LoadData()
@@ -421,5 +454,10 @@
     private void NavigateToOrder()
     {
         Navigation.NavigateTo("/customer/order");
+    }
+
+    private void NavigateToOrderDetails()
+    {
+        Navigation.NavigateTo("/customer/order-details");
     }
 }
