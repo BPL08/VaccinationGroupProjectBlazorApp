@@ -169,5 +169,49 @@ namespace DAO
                 .Select(vs => vs.OrderDetail)
                 .SingleOrDefault();
         }
+        public Order FindOrderByVaccinationScheduleId(Guid vaccinationScheduleId)
+        {
+            try
+            {
+                var order = _dbContext.VaccinationSchedules
+                    .Include(vs => vs.OrderDetail)
+                        .ThenInclude(od => od.Order)
+                    .Where(vs => vs.VaccinationScheduleId == vaccinationScheduleId)
+                    .Select(vs => vs.OrderDetail.Order)
+                    .SingleOrDefault();
+
+                return order;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error finding order by vaccination schedule ID: {ex.Message}", ex);
+            }
+        }
+        public bool AreAllSchedulesCompleted(Guid vaccinationScheduleId)
+        {
+            try
+            {
+                var schedule = _dbContext.VaccinationSchedules
+                    .Include(vs => vs.OrderDetail) 
+                    .FirstOrDefault(vs => vs.VaccinationScheduleId == vaccinationScheduleId);
+                if (schedule == null)
+                {
+                    throw new Exception("Vaccination schedule not found");
+                }
+                var orderId = schedule.OrderDetail.FKOrderId;
+                var orderDetailIds = _dbContext.OrderDetails
+                    .Where(od => od.FKOrderId == orderId)
+                    .Select(od => od.OrderDetailId)
+                    .ToList();
+                bool hasPendingSchedules = _dbContext.VaccinationSchedules
+                    .Where(vs => orderDetailIds.Contains(vs.FKOrderDetailsId))
+                    .Any(vs => vs.Status == 0); 
+                return !hasPendingSchedules;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error checking schedule status: {ex.Message}", ex);
+            }
+        }
     }
 }

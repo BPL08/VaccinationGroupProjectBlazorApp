@@ -13,6 +13,8 @@ namespace Repository.Repository
         public List<VaccineBatch> GetAllVaccineBatches() => VaccineBatchDAO.Instance.GetAllVaccineBatches();
 
         public void UpdateVaccineBatch(int batchId, VaccineBatch batch) => VaccineBatchDAO.Instance.UpdateVaccineBatch(batchId, batch);
+        public bool BatchNumberExists(string batchNumber)
+        => VaccineBatchDAO.Instance.BatchNumberExists(batchNumber);
 
         /*     public List<VaccineBatch> GetVaccineBatchesByVaccine(int vaccineId) => VaccineBatchDAO.Instance.GetVaccineBatchesByVaccine(vaccineId);
 

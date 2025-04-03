@@ -327,7 +327,7 @@
                     TotalAmountPrice = cartItems.Sum(i => i.Price),
                     TotalPaidPrice = 0,
                     PurchaseDate = DateTime.Now,
-                    Status = 0 // Pending
+                    Status = 1 // Pending
                 };
             OrderRepository.AddOrder(order);
 
