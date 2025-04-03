@@ -34,8 +34,9 @@
                             <label class="form-label">Status</label>
                             <InputSelect @bind-Value="filterStatus" class="form-control">
                                 <option value="">All</option>
-                                <option value="0">Pending</option>
-                                <option value="1">Active</option>
+                                <option value="0">@BO.Enums.ScheduleEnum.PENDING</option>
+                                <option value="1">@BO.Enums.ScheduleEnum.ATTENDED</option>
+                                <option value="2">@BO.Enums.ScheduleEnum.UNATTENDED</option>
                             </InputSelect>
                         </div>
                         <div class="col-md-2">
@@ -74,7 +75,7 @@
                         <table class="table table-hover custom-table mb-0">
                             <thead class="bg-light">
                                 <tr>
-                                    <th scope="col">Schedule ID</th>
+                                    <th scope="col">No.</th>
                                     <th scope="col">Profile Name</th>
                                     <th scope="col">Center Name</th>
                                     <th scope="col">Dose Number</th>
@@ -86,10 +87,10 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach (var schedule in schedules)
+                                @foreach (var (schedule, index) in schedules.Select((s, i) => (s, i)))
                                 {
                                     <tr>
-                                        <td>@schedule.VaccinationScheduleId</td>
+                                        <td>@(index + 1)</td>
                                         <td>@(schedule.Profile?.Name ?? "N/A")</td>
                                         <td>@(schedule.Center?.Name ?? "N/A")</td>
                                         <td>@schedule.DoseNumber</td>
@@ -97,8 +98,8 @@
                                         <td>@(schedule.ActualDate.HasValue ? schedule.ActualDate.Value.ToString("MMM dd, yyyy") : "Not Yet")</td>
                                         <td>@(schedule.AdministeredBy ?? "N/A")</td>
                                         <td>
-                                            <span class="badge @(schedule.Status == 1 ? "bg-success" : "bg-warning")">
-                                                @(schedule.Status == 1 ? "Active" : "Pending")
+                                            <span class="badge @(GetStatusBadgeClass(schedule.Status))">
+                                                @GetStatusText(schedule.Status)
                                             </span>
                                         </td>
                                         <td>
@@ -143,7 +144,7 @@
     private DateTime filterStartDate = DateTime.Today.AddDays(-(int)DateTime.Today.DayOfWeek);
     private DateTime filterEndDate = DateTime.Today.AddDays(-(int)DateTime.Today.DayOfWeek).AddDays(6);
     private string filterCenterName = "";
-    private string filterStatus = "";
+    private int? filterStatus = null; // Changed to nullable int to support "All" option
     private string filterProfileName = "";
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -179,15 +180,16 @@
     {
         try
         {
-            schedules = VaccinationScheduleRepository.GetVaccinationSchedulesByDateRange(filterStartDate, filterEndDate) ?? new List<VaccinationSchedule>();
+            schedules = VaccinationScheduleRepository.GetVaccinationSchedulesByDateRange(filterStartDate, filterEndDate)
+                ?? new List<VaccinationSchedule>();
 
             if (!string.IsNullOrEmpty(filterCenterName))
             {
                 schedules = schedules.Intersect(VaccinationScheduleRepository.GetVaccinationSchedulesByCenterName(filterCenterName)).ToList();
             }
-            if (!string.IsNullOrEmpty(filterStatus))
+            if (filterStatus.HasValue)
             {
-                schedules = schedules.Intersect(VaccinationScheduleRepository.GetVaccinationSchedulesByStatus(int.Parse(filterStatus))).ToList();
+                schedules = schedules.Where(s => s.Status == filterStatus.Value).ToList();
             }
             if (!string.IsNullOrEmpty(filterProfileName))
             {
@@ -213,7 +215,7 @@
         filterStartDate = DateTime.Today.AddDays(-(int)DateTime.Today.DayOfWeek);
         filterEndDate = filterStartDate.AddDays(6);
         filterCenterName = "";
-        filterStatus = "";
+        filterStatus = null; // Reset to null for "All"
         filterProfileName = "";
         await LoadData();
     }
@@ -261,5 +263,27 @@
     private async Task<Account> GetAccountDetails(string accountId)
     {
         return await Task.FromResult(new Account { AccountRole = "Staff" });
+    }
+
+    private string GetStatusText(int status)
+    {
+        return status switch
+        {
+            0 => BO.Enums.ScheduleEnum.PENDING,
+            1 => BO.Enums.ScheduleEnum.ATTENDED,
+            2 => BO.Enums.ScheduleEnum.UNATTENDED,
+            _ => "UNKNOWN"
+        };
+    }
+
+    private string GetStatusBadgeClass(int status)
+    {
+        return status switch
+        {
+            0 => "bg-warning text-dark", // Added text-dark for better visibility
+            1 => "bg-success",
+            2 => "bg-danger",
+            _ => "bg-secondary"
+        };
     }
 }

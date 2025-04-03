@@ -14,7 +14,12 @@
                     <EditForm Model="@Batch" OnValidSubmit="HandleUpdate">
                         <DataAnnotationsValidator />
                         <ValidationSummary class="text-danger" />
-
+                        @if (!string.IsNullOrEmpty(batchNumberErrorMessage))
+                        {
+                            <div class="alert alert-danger" role="alert">
+                                @batchNumberErrorMessage
+                            </div>
+                        }
                         <div class="mb-3">
                             <label class="form-label">Batch Number</label>
                             <InputText @bind-Value="Batch.BatchNumber" class="form-control" />
@@ -61,27 +66,50 @@
 
     private List<VaccineCenter> centers = new();
     private string selectedCenterId;
+    private string batchNumberErrorMessage = "";
+    private string originalBatchNumber = "";
 
     protected override async Task OnInitializedAsync()
     {
         var (fetchedCenters, _) = VaccineCenterRepository.GetAllVaccineCenters(1, int.MaxValue);
         centers = fetchedCenters ?? new List<VaccineCenter>();
-     
+    }
+
+    protected override void OnParametersSet()
+    {
+        // Store the original batch number when the modal opens
+        originalBatchNumber = Batch?.BatchNumber ?? "";
+        selectedCenterId = Batch?.FKCenterId.ToString() ?? "";
+        batchNumberErrorMessage = "";
     }
 
     private async Task HandleUpdate()
     {
+        // Only check for duplicate if batch number has changed
+        if (Batch.BatchNumber != originalBatchNumber)
+        {
+            if (VaccineBatchRepository.BatchNumberExists(Batch.BatchNumber))
+            {
+                batchNumberErrorMessage = "This batch number already exists. Please use a unique batch number.";
+                StateHasChanged();
+                return;
+            }
+        }
+
         if (!string.IsNullOrEmpty(selectedCenterId))
         {
             Batch.FKCenterId = int.Parse(selectedCenterId);
         }
+
         VaccineBatchRepository.UpdateVaccineBatch(Batch.VaccineBatchId, Batch);
+        batchNumberErrorMessage = "";
         await OnSave.InvokeAsync();
         await CloseModal();
     }
 
     private async Task CloseModal()
     {
+        batchNumberErrorMessage = "";
         await OnClose.InvokeAsync();
     }
 }

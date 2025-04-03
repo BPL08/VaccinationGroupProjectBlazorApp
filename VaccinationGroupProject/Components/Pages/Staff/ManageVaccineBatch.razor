@@ -54,8 +54,10 @@
                                         </span>
                                     </td>
                                     <td>
-                                        <button class="btn btn-info btn-sm me-1" @onclick="() => ViewBatchDetails(batch.VaccineBatchId)">View Details</button>
-                                        <button class="btn btn-primary btn-sm" @onclick="() => ShowUpdateBatchModal(batch)">Edit</button>
+                                        <div class="btn-group" role="group">
+                                            <button class="btn btn-info btn-sm" @onclick="() => ViewBatchDetails(batch.VaccineBatchId)">View Details</button>
+                                            <button class="btn btn-primary btn-sm" @onclick="() => ShowUpdateBatchModal(batch)">Edit</button>
+                                        </div>
                                     </td>
                                 </tr>
                             }
@@ -78,6 +80,12 @@
                                 <EditForm Model="@newBatch" OnValidSubmit="HandleAddBatch">
                                     <DataAnnotationsValidator />
                                     <ValidationSummary class="text-danger" />
+                                    @if (!string.IsNullOrEmpty(batchNumberErrorMessage))
+                                    {
+                                        <div class="alert alert-danger" role="alert">
+                                            @batchNumberErrorMessage
+                                        </div>
+                                    }
                                     <div class="mb-3">
                                         <label class="form-label">Batch Number</label>
                                         <InputText @bind-Value="newBatch.BatchNumber" class="form-control" />
@@ -135,6 +143,7 @@
     private string selectedCenterId;
     private bool showUpdateModal = false;
     private VaccineBatch selectedBatch;
+    private string batchNumberErrorMessage = "";
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -186,22 +195,34 @@
     {
         newBatch = new VaccineBatch();
         selectedCenterId = "";
+        batchNumberErrorMessage = "";
         showAddModal = true;
     }
 
     private void CloseAddModal()
     {
         showAddModal = false;
+        batchNumberErrorMessage = "";
     }
 
     private async Task HandleAddBatch()
     {
+        // Check if batch number already exists
+        if (VaccineBatchRepository.BatchNumberExists(newBatch.BatchNumber))
+        {
+            batchNumberErrorMessage = "This batch number already exists. Please use a unique batch number.";
+            StateHasChanged();
+            return;
+        }
+
         if (!string.IsNullOrEmpty(selectedCenterId))
         {
             newBatch.FKCenterId = int.Parse(selectedCenterId);
         }
+
         VaccineBatchRepository.AddVaccineBatch(newBatch);
         showAddModal = false;
+        batchNumberErrorMessage = "";
         await LoadData();
     }
 
